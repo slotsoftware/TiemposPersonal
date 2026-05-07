@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KronoPersonal - Acceso Oficial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            font-family: sans-serif; 
+            color: #f8fafc;
+        }
+
+        .silver-panel {
+            background: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 45%, #94a3b8 55%, #cbd5e1 100%);
+            border: 1px solid #ffffff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 15px rgba(255,255,255,0.5);
+            color: #1e293b;
+        }
+
+        .chrome-panel {
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .silver-text {
+            background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .btn-silver {
+            background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
+            color: #0f172a;
+            border: 1px solid #ffffff;
+            transition: all 0.3s ease;
+        }
+        .btn-silver:hover {
+            background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255,255,255,0.4);
+        }
+
+        #app-frame { width: 100vw; height: 100vh; border: none; display: none; background: white; }
+        
+        .img-container {
+            width: 100%;
+            max-width: 240px;
+            margin: 0 auto 2.5rem auto;
+            position: relative;
+        }
+
+        .aspect-9-16 {
+            width: 100%;
+            aspect-ratio: 9 / 16;
+            object-fit: cover;
+            border-radius: 1rem;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            border: 3px solid #cbd5e1;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .input-metallic {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #94a3b8;
+            color: white;
+            transition: all 0.3s;
+        }
+        .input-metallic:focus {
+            border-color: #f8fafc;
+            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+            outline: none;
+        }
+
+        /* Modal de Alerta de Sesión */
+        #session-alert {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="min-h-screen overflow-y-auto">
+
+    <!-- Modal de Sesión Duplicada -->
+    <div id="session-alert">
+        <div class="chrome-panel p-8 rounded-2xl max-w-sm text-center border-red-500/50">
+            <i class="fas fa-user-shield text-4xl text-red-400 mb-4"></i>
+            <h3 class="text-xl font-bold text-white mb-2">Sesión Finalizada</h3>
+            <p class="text-sm text-slate-300 mb-6">Se ha detectado un inicio de sesión en otro dispositivo.</p>
+            <button onclick="location.reload()" class="btn-silver w-full py-3 rounded-xl font-bold text-xs uppercase tracking-widest">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <div id="auth-container" class="min-h-screen flex flex-col items-center justify-center p-4 md:p-6">
+        
+        <div class="text-center mb-8 md:mb-10 mt-4">
+            <h1 class="text-3xl md:text-4xl font-black tracking-tighter silver-text uppercase">KRONO PERSONAL</h1>
+            <div class="h-1 w-20 md:w-24 bg-gradient-to-r from-transparent via-slate-300 to-transparent mx-auto mt-1"></div>
+            <p class="text-slate-400 text-[9px] md:text-[10px] uppercase tracking-[0.3em] mt-2 font-bold">Silver Edition / Gestión de Slot</p>
+        </div>
+
+        <div class="img-container">
+            <div class="aspect-9-16 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                <img id="user-image" src="kronoplata.jpg" 
+                     alt="[Imagen de KronoPersonal]" 
+                     class="w-full h-full object-cover"
+                     onerror="this.style.display='none'; document.getElementById('placeholder').style.display='flex';">
+                
+                <div id="placeholder" class="flex flex-col items-center justify-center p-5 text-center text-slate-500" style="display: none;">
+                    <i class="fas fa-microchip text-5xl mb-4 opacity-20"></i>
+                    <p class="text-xs font-bold uppercase tracking-widest silver-text">kronoplata.jpg</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
+
+            <div class="silver-panel rounded-3xl p-6 md:p-8 relative flex flex-col justify-between">
+                <div class="absolute -top-3 -right-3 bg-slate-900 text-white text-[9px] font-bold px-3 py-1 rounded-full border border-slate-500 shadow-xl">LICENCIA PREMIUM</div>
+                
+                <div>
+                    <h2 class="text-lg md:text-xl font-black mb-4 flex items-center">
+                        <i class="fas fa-shield-halved mr-3 opacity-70"></i> ADQUISICIÓN
+                    </h2>
+                    
+                    <p class="text-slate-800 text-sm mb-6 leading-relaxed font-medium">
+                        Tecnología de precisión para Slot. Un solo pago de 5€, control total de por vida.
+                    </p>
+
+                    <div class="bg-white/30 rounded-2xl p-5 border border-white/40 mb-6">
+                        <ul class="text-xs space-y-3 text-slate-900 font-bold">
+                            <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-slate-700"></i> Solicita acceso vía Email</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-slate-700"></i> Pago único de 5,00€</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-slate-700"></i> Activación inmediata</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <a id="mail-link" href="#" class="block w-full bg-slate-900 hover:bg-black text-white font-black py-4 rounded-xl text-center shadow-2xl transition duration-300 transform hover:scale-[1.02] text-sm tracking-widest uppercase">
+                    SOLICITAR AHORA (5€)
+                </a>
+            </div>
+
+            <div class="chrome-panel rounded-3xl p-6 md:p-8 flex flex-col">
+                <h2 class="text-lg md:text-xl font-bold text-white mb-6 flex items-center silver-text">
+                    <i class="fas fa-lock-open mr-3"></i> ACCESO CLIENTE
+                </h2>
+
+                <form id="login-form" class="space-y-6 flex-grow">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-300 uppercase mb-2 tracking-widest">Identificación</label>
+                        <input type="email" id="email" required 
+                            class="w-full input-metallic rounded-xl p-4 text-sm"
+                            placeholder="tu@email.com">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-300 uppercase mb-2 tracking-widest">Código de Activación</label>
+                        <input type="text" id="code" required 
+                            class="w-full input-metallic rounded-xl p-4 text-center tracking-[0.5em] uppercase font-mono text-sm"
+                            placeholder="XXX-XXX">
+                    </div>
+                    
+                    <div id="msg-box" class="hidden p-3 rounded-xl text-xs text-center font-bold break-words"></div>
+
+                    <button type="submit" id="btn-login" class="btn-silver w-full font-black py-4 rounded-xl shadow-xl transition flex justify-center items-center text-sm tracking-widest uppercase">
+                        ENTRAR <i class="fas fa-chevron-right ml-3 text-xs"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <p class="mt-12 text-[9px] text-slate-500 text-center max-w-lg uppercase tracking-[0.2em] font-medium">
+            KronoPersonal Silver v2.0 <span class="mx-2">|</span> slotcarhome@gmail.com
+        </p>
+    </div>
+
+    <iframe id="app-frame" src="about:blank"></iframe>
+    
+    <button onclick="logout()" id="logout-btn" class="hidden fixed bottom-8 right-8 btn-silver w-14 h-14 rounded-2xl shadow-2xl z-[100] flex items-center justify-center text-xl border-2 border-white">
+        <i class="fas fa-power-off"></i>
+    </button>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, query, where, doc, updateDoc, setDoc, onSnapshot, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDW-2Yc4kvZJYbNOVeesPZWdRThYe0noUI",
+          authDomain: "correo-95e58.firebaseapp.com",
+          projectId: "correo-95e58",
+          storageBucket: "correo-95e58.firebasestorage.app",
+          messagingSenderId: "977860532946",
+          appId: "1:977860532946:web:3738c6b7165201bce7ab0b",
+          measurementId: "G-6DMG51VQ92"
+        };
+        
+        const ADMIN_EMAIL = "slotcarhome@gmail.com"; 
+        const APP_FILENAME = "kronopersonal.html";
+        const APP_ID = "app_krono";
+
+        // Inicialización segura
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // Autenticación silenciosa (importante para evitar errores en local)
+        signInAnonymously(auth).catch(err => console.warn("Aviso: Autenticación limitada en local.", err));
+
+        const mailLink = document.getElementById('mail-link');
+        const emailInput = document.getElementById('email');
+        let unsubscribeSession = null;
+
+        // --- SOLUCIÓN PARA EJECUCIÓN LOCAL ---
+        // Esta función manual reemplaza a crypto.randomUUID() para que funcione sin HTTPS/Servidor
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        
+        function updateMailLink() {
+            const userEmail = emailInput.value || "[tu correo]";
+            const subject = "Interés Licencia KronoPersonal Plata";
+            const body = `Hola, equipo de SLOTCARHOME,%0D%0A%0D%0AEstoy interesado en adquirir la licencia de KronoPersonal por el Precio de 5 Euros%0D%0A%0D%0AQuedo a la espera de sus instrucciones para proceder con el pago.%0D%0A%0D%0AGracias y un saludo.`;
+            mailLink.href = `mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`;
+        }
+        emailInput.addEventListener('input', updateMailLink);
+        updateMailLink();
+
+        // --- TRACKING DE CLICS ---
+        mailLink.addEventListener('click', async () => {
+            try {
+                const statsRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'stats');
+                await setDoc(statsRef, { 
+                    purchase_clicks: increment(1),
+                    last_click: new Date().toISOString()
+                }, { merge: true });
+            } catch (e) {
+                console.warn("Click no registrado (Posible bloqueo local)", e);
+            }
+        });
+
+        // --- SISTEMA DE LOGIN Y PROTECCIÓN ---
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = emailInput.value.toLowerCase().trim();
+            const code = document.getElementById('code').value.trim();
+            const btn = document.getElementById('btn-login');
+            
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>'; btn.disabled = true;
+            document.getElementById('msg-box').classList.add('hidden');
+
+            try {
+                // 1. Verificar Usuario
+                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'access_codes'), where("email", "==", email), where("code", "==", code));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const docSnap = querySnapshot.docs[0];
+                    const userData = docSnap.data();
+                    
+                    if(userData.active === false) {
+                        showMessage("⛔ LICENCIA NO ACTIVA", "error");
+                    } else { 
+                        // 2. Protección de Sesión (Escritura segura con fallback)
+                        try {
+                            const sessionId = generateUUID(); // Usamos la función manual segura
+                            const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'access_codes', docSnap.id);
+
+                            await updateDoc(docRef, { 
+                                current_session: sessionId,
+                                last_login: new Date().toISOString()
+                            });
+
+                            // Guardar datos locales
+                            localStorage.setItem('user_' + APP_ID, email);
+                            localStorage.setItem('doc_id_' + APP_ID, docSnap.id);
+                            localStorage.setItem('session_' + APP_ID, sessionId);
+
+                            monitorSession(docSnap.id);
+                            showApp(); 
+                        } catch (writeError) {
+                            console.error("Error escritura (Local):", writeError);
+                            // Si falla la protección por ser local, permitimos entrar pero avisamos en consola
+                            console.warn("Entrando en modo sin protección de sesión (Fallo de escritura DB)");
+                            localStorage.setItem('user_' + APP_ID, email);
+                            showApp(); 
+                        }
+                    }
+                } else {
+                    showMessage("❌ DATOS INVÁLIDOS", "error");
+                }
+            } catch (error) { 
+                console.error("Error Login:", error); 
+                showMessage("ERROR: " + error.message, "error"); 
+            }
+            btn.innerHTML = 'ENTRAR <i class="fas fa-chevron-right ml-3 text-xs"></i>'; btn.disabled = false;
+        });
+
+        function monitorSession(docId) {
+            if (unsubscribeSession) unsubscribeSession();
+            try {
+                const docRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'access_codes', docId);
+                unsubscribeSession = onSnapshot(docRef, (docSnap) => {
+                    const data = docSnap.data();
+                    const localSession = localStorage.getItem('session_' + APP_ID);
+                    if (data && data.current_session && data.current_session !== localSession) {
+                        forceLogout();
+                    }
+                }, (error) => { console.warn("Monitor desconectado:", error); });
+            } catch (e) { console.warn("No se puede monitorizar sesión"); }
+        }
+
+        function showMessage(text, type) {
+            const box = document.getElementById('msg-box');
+            box.textContent = text;
+            box.className = `p-3 rounded-xl text-xs text-center font-bold border ${type === 'error' ? 'bg-red-900/40 text-red-200 border-red-500/50' : 'bg-green-900/40 text-green-200 border-green-500/50'}`;
+            box.classList.remove('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('app-frame').src = APP_FILENAME;
+            document.getElementById('app-frame').style.display = 'block';
+            document.getElementById('logout-btn').classList.remove('hidden');
+        }
+
+        function forceLogout() {
+            document.getElementById('session-alert').style.display = 'flex';
+            localStorage.removeItem('user_' + APP_ID); 
+            localStorage.removeItem('session_' + APP_ID);
+            localStorage.removeItem('doc_id_' + APP_ID);
+            document.getElementById('app-frame').src = 'about:blank';
+        }
+
+        window.logout = function() { 
+            if (unsubscribeSession) unsubscribeSession();
+            localStorage.removeItem('user_' + APP_ID); 
+            localStorage.removeItem('session_' + APP_ID);
+            localStorage.removeItem('doc_id_' + APP_ID);
+            location.reload(); 
+        }
+
+        const savedUser = localStorage.getItem('user_' + APP_ID);
+        const savedDocId = localStorage.getItem('doc_id_' + APP_ID);
+
+        if(savedUser && savedDocId) {
+            showApp();
+            monitorSession(savedDocId);
+        } else if (savedUser) window.logout(); 
+    </script>
+</body>
+</html>
+
+
+

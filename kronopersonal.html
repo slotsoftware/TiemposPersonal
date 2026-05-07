@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KRONO V.3.0 - Voice Fix</title>
+    
+    <!-- METADATOS PWA Y PERMISOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KRONO V.2">
+    <meta name="application-name" content="KRONO V.2">
+    <meta http-equiv="Permissions-Policy" content="camera=(self)">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app;
+        let db;
+        let auth;
+        
+        window.initFirebase = async () => {
+            try {
+                if (Object.keys(firebaseConfig).length === 0) {
+                    console.warn("Firebase config not available. Running in local mode.");
+                    return;
+                }
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('Debug'); 
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+            }
+        };
+        window.initFirebase();
+    </script>
+    
+    <style>
+        /* --- ESTILOS PLATINUM / SILVER --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #b0b8c1 0%, #636e72 100%);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            min-height: 100vh;
+            color: #1f2937; 
+            overscroll-behavior: none;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        input, select { user-select: text; -webkit-user-select: text; }
+        
+        /* Clases para Paneles Plateados Brillantes */
+        .silver-panel {
+            background: linear-gradient(to bottom, #9ca3af 0%, #e5e7eb 40%, #ffffff 100%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.25), inset 0 0 15px rgba(255,255,255,0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            color: #111827; 
+        }
+
+        .silver-input {
+            background: #f3f4f6; border: 1px solid #9ca3af; color: #111827;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1);
+        }
+        .silver-input:focus {
+            background: #ffffff; border-color: #6b7280; outline: none;
+            box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.5);
+        }
+
+        .font-arial { font-family: Arial, sans-serif !important; }
+
+        .neon-silver-title {
+            color: #4a5568;
+            text-shadow: 0 0 2px #fff, 0 0 5px #cbd5e0, 0 0 10px rgba(160, 174, 192, 0.5), 2px 2px 4px rgba(0,0,0,0.25);
+            text-align: left; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        
+        .traffic-light-container.five-lights { display: flex; gap: 10px; }
+        .light {
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #333; border: 2px solid #555; 
+            box-shadow: inset 0 0 5px #000;
+            transition: background-color 0.1s ease, box-shadow 0.1s ease;
+        }
+        .light.red { background-color: #ef4444; box-shadow: 0 0 15px #ef4444, inset 0 0 10px rgba(255,255,255,0.5); }
+        .light.green { background-color: #10b981; box-shadow: 0 0 15px #10b981, inset 0 0 10px rgba(255,255,255,0.5); }
+
+        #video-container {
+            position: relative; width: 100%; 
+            border: 4px solid #d1d5db; background-color: #000; 
+            border-radius: 0.5rem; overflow: hidden; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        #webcam-feed {
+            max-height: 320px; object-fit: cover; width: 100%;
+            display: block; transform: scaleX(1);
+            filter: contrast(1.1) grayscale(0.1); 
+        }
+
+        /* --- ROI MINIMALISTA (HITBOX MEJORADO) --- */
+        #movable-rectangle {
+            position: absolute; top: 25%; left: 25%; width: 50%; height: 50%;
+            cursor: move; 
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 15px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.1);
+            transition: background-color 0.1s ease, border-color 0.2s ease, box-shadow 0.2s ease; 
+            z-index: 10; box-sizing: border-box; touch-action: none; display: none; 
+        }
+        
+        .roi-detected {
+            background-color: rgba(255, 255, 255, 0.4) !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.6) !important;
+        }
+        
+        .roi-locked {
+            border-color: #6b7280 !important; 
+            background-color: rgba(0, 0, 0, 0.1) !important;
+            opacity: 0.5;
+            box-shadow: none !important;
+        }
+        .roi-locked #test-msg { display: block; content: "WAIT..."; color: #ccc; text-shadow: none; font-size: 12px;}
+
+        /* --- MANIJAS TÁCTILES MEJORADAS (AREA 44px, VISUAL 14px) --- */
+        .resize-handle {
+            position: absolute; 
+            width: 44px; height: 44px; /* Area tactil */
+            background: transparent;
+            z-index: 20; 
+            touch-action: none; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .resize-handle::after {
+            content: '';
+            width: 14px; height: 14px; /* Visual */
+            background-color: #ffffff; 
+            border: 1px solid #9ca3af; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4); 
+            border-radius: 2px;
+            transition: transform 0.1s ease;
+        }
+        
+        .resize-handle:active::after { transform: scale(1.3); background-color: #f3f4f6; }
+
+        #handle-tl { top: -22px; left: -22px; cursor: nwse-resize; } 
+        #handle-br { bottom: -22px; right: -22px; cursor: nwse-resize; } 
+        
+        #detection-val-indicator {
+            position: absolute; bottom: 4px; right: 4px; 
+            top: auto; left: auto; 
+            background-color: rgba(0,0,0,0.6); color: #fff; 
+            font-size: 9px; font-weight: 600; font-family: 'Arial', sans-serif;
+            padding: 2px 6px; border-radius: 4px;
+            pointer-events: none; border: none; 
+            letter-spacing: 0.5px;
+        }
+        
+        .dragging { cursor: grabbing !important; }
+        .resizing-nwse { cursor: nwse-resize !important; }
+        #video-canvas { display: none; }
+
+        .timer-value {
+            font-size: 1.25rem; line-height: 1.75rem; white-space: nowrap;
+            color: #111827; font-weight: 900; text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+        }
+        @media (min-width: 640px) { .timer-value { font-size: 1.5rem; line-height: 2rem; } }
+        
+        .telemetry-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        @media (max-width: 380px) { .telemetry-grid { grid-template-columns: 1fr; } }
+
+        .telemetry-item {
+            display: flex; flex-direction: column; padding: 8px; border-radius: 6px;
+            background: linear-gradient(to bottom, #f9fafb, #e5e7eb);
+            border: 1px solid #d1d5db; box-shadow: inset 0 1px 0 #fff, 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .telemetry-label {
+            font-size: 0.75rem; font-weight: 700; color: #6b7280; margin-bottom: 2px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .telemetry-data { font-size: 0.9rem; font-weight: 800; color: #111827; }
+        .telemetry-data.green { color: #059669; }
+        .telemetry-data.yellow { color: #d97706; }
+        .telemetry-data.cyan { color: #0891b2; }
+
+        #config-panel {
+            transition: all 0.3s ease-in-out; max-height: 0; overflow: hidden; opacity: 0; transform: translateY(-20px);
+        }
+        #config-panel.open { max-height: 1000px; opacity: 1; transform: translateY(0); padding: 16px; margin-top: 16px; }
+        
+        .race-control-btn {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 12px 0; border-radius: 12px;
+            background: linear-gradient(180deg, #f3f4f6 0%, #d1d5db 100%);
+            border: 1px solid #9ca3af; transition: all 0.1s ease;
+            font-size: 0.75rem; font-weight: 700; color: #374151;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 #fff;
+        }
+        .race-control-btn:active { box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transform: translateY(1px); }
+        
+        #start-race-btn.race-control-btn { color: #065f46; border-bottom: 3px solid #065f46; }
+        #start-race-btn.race-control-btn:hover:not(:disabled) { background: linear-gradient(180deg, #d1fae5 0%, #a7f3d0 100%); }
+        
+        #reset-race-btn.race-control-btn { color: #991b1b; border-bottom: 3px solid #991b1b; }
+        #reset-race-btn.race-control-btn:hover:not(:disabled) { background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%); }
+
+        #central-config-btn { background: linear-gradient(180deg, #e5e7eb 0%, #9ca3af 100%); border-bottom: 3px solid #4b5563; color: #111827; }
+        #central-config-btn:hover:not(:disabled) { background: linear-gradient(180deg, #f3f4f6 0%, #d1d5db 100%); }
+        
+        .control-icon { width: 20px; height: 20px; margin-bottom: 4px; }
+        @media (max-width: 640px) {
+            .light { width: 20px; height: 20px; }
+            .traffic-light-container.five-lights { gap: 5px; }
+            .header-flex { flex-direction: column; }
+            #webcam-feed { max-height: 200px; }
+        }
+        
+        #lap-graph-canvas {
+            width: 100%; height: 200px; background: #e5e7eb; 
+            border-radius: 6px; border: 1px solid #9ca3af;
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(255, 255, 255, 0.6); backdrop-filter: blur(5px);
+            z-index: 100; display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff, #dcdcdc);
+            color: #111827; border-radius: 1rem; border: 1px solid #fff;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); max-width: 90%; max-height: 90%;
+            overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        .modal-overlay.open .modal-content { transform: scale(1); }
+        
+        table { width: 100%; text-align: left; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; border-bottom: 1px solid #d1d5db; font-family: Arial, sans-serif; font-size: 0.85rem; color: #374151; }
+        th { color: #111827; text-transform: uppercase; font-weight: 800; border-bottom: 2px solid #9ca3af; }
+        @media (max-width: 400px) { th, td { font-size: 0.75rem; padding: 4px; } }
+        
+        /* TEST MESSAGE IN ROI */
+        #test-msg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #10b981; font-weight: 900; font-size: 16px; text-transform: uppercase;
+            text-shadow: 0 0 5px #fff; pointer-events: none;
+            white-space: nowrap; font-family: Arial, sans-serif; display: none;
+        }
+        
+        #record-notification {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: linear-gradient(to right, #fff, #e0e0e0); color: #000;
+            padding: 1rem 2rem; border-radius: 1rem; font-size: 1.5rem; font-weight: 900;
+            border: 4px solid #silver; box-shadow: 0 0 40px rgba(255, 255, 255, 1), 0 0 10px rgba(0,0,0,0.2);
+            z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        #record-notification.show { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+        
+        .toggle-checkbox:checked { right: 0; border-color: #6b7280; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #9ca3af; }
+        
+        .btn-adjust {
+            background: linear-gradient(to bottom, #fff, #e5e7eb); border: 1px solid #9ca3af;
+            color: #374151; box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+        }
+        .btn-adjust:active { background: #d1d5db; box-shadow: inset 0 2px 2px rgba(0,0,0,0.1); }
+        
+        /* --- NUEVOS ESTILOS PARA V2 --- */
+        .calib-overlay {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8); color: #fff; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            z-index: 50; display: none; backdrop-filter: blur(2px); font-family: Arial, sans-serif;
+        }
+        .calib-overlay.active { display: flex; }
+        
+        .spinner {
+            border: 6px solid #333; border-top: 6px solid #fff;
+            border-radius: 50%; width: 50px; height: 50px;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #false-start-alert {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90%; background: linear-gradient(to bottom, #991b1b, #7f1d1d); 
+            border: 4px solid #fff; box-shadow: 0 0 30px #991b1b;
+            color: #fff; text-align: center; padding: 1.5rem; border-radius: 1rem;
+            z-index: 60; display: none; font-family: Arial, sans-serif;
+        }
+        #false-start-alert.show { display: block; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.05); } }
+
+        /* --- BANDERA AMARILLA (PAUSA) --- */
+        #yellow-flag-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 40; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        #yellow-flag-overlay.active { display: flex; }
+        .yellow-flag-icon { width: 64px; height: 64px; color: #facc15; animation: wave 1s infinite ease-in-out; }
+        @keyframes wave { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
+    </style>
+</head>
+<body>
+    <div class="container w-full max-w-3xl mx-auto p-4">
+
+        <!-- HEADER SILVER -->
+        <div class="silver-panel flex flex-col sm:flex-row justify-between items-center w-full py-3 px-4 mt-4 mb-4 header-flex">
+            <div class="flex items-center space-x-2 mb-2 sm:mb-0">
+                <div class="flex flex-col mr-3">
+                    <h1 class="text-base sm:text-lg neon-silver-title tracking-wider leading-tight">
+                        KRONO V.3.0
+                    </h1>
+                    <span class="text-[10px] font-normal text-gray-500">By Albert Closa</span>
+                </div>
+                
+                <button id="history-btn" class="flex items-center text-gray-500 hover:text-black transition-colors px-3 py-1 rounded-full hover:bg-gray-200 border border-transparent hover:border-gray-300 group" title="Ver Historial">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-history mr-2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/><path d="M3 3v9h9"/><path d="M12 7v5l4 2"/></svg>
+                    <span class="text-xs font-bold uppercase tracking-wider" data-i18n="history">Historial</span>
+                </button>
+                
+                <button id="fullscreen-btn" class="flex items-center text-gray-500 hover:text-black transition-colors px-3 py-1 rounded-full hover:bg-gray-200 border border-transparent hover:border-gray-300 group" title="Pantalla Completa">
+                     <svg id="fs-icon-enter" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                     <svg id="fs-icon-exit" class="hidden lucide lucide-minimize" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+                </button>
+            </div>
+            <div id="traffic-light-module" class="traffic-light-container five-lights mt-2 sm:mt-0">
+                <div id="light-1" class="light"></div>
+                <div id="light-2" class="light"></div>
+                <div id="light-3" class="light"></div>
+                <div id="light-4" class="light"></div>
+                <div id="light-5" class="light"></div>
+            </div>
+        </div>
+        
+        <!-- CONFIG PANEL SILVER -->
+        <div id="config-panel" class="silver-panel w-full mb-4">
+            <!-- LANGUAGE SELECTOR ADDED HERE (Unobtrusive) -->
+            <div class="mb-4 border-b border-gray-300 pb-2">
+                 <div class="flex items-center justify-between">
+                     <label for="lang-select" class="text-xs font-bold text-gray-500 uppercase flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        <span data-i18n="langLabel">Idioma / Language</span>
+                     </label>
+                     <select id="lang-select" class="silver-input p-1 rounded-md text-sm font-bold w-1/2">
+                         <option value="es">Español</option>
+                         <option value="en">English</option>
+                         <option value="fr">Français</option>
+                     </select>
+                 </div>
+            </div>
+
+            <h2 class="text-base neon-silver-title mb-3 border-b border-gray-300 pb-2 flex items-center justify-start">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-cog mr-2 text-gray-500"><path d="M18 21a8 8 0 0 0-8-8c-2 0-4-.5-6-1"/><circle cx="10" cy="8" r="5"/><circle cx="19" cy="18" r="3"/><path d="m19 21-1-1.09c-.38-.41-.58-1.12-.2-1.76l.73-1.22c.26-.43.5-.96.48-1.5-.02-.54-.28-1.03-.76-1.3l-.76-.41c-.48-.26-1.11-.47-1.46-.86-.34-.39-.47-.94-.36-1.45l.23-1.07c.1-.47-.1-.99-.54-1.29l-1.01-.71c-.43-.3-.98-.38-1.5-.23-.52.14-1.13-.1-.95-.62l.33-1.04c.16-.5-.16-1-.59-1.32l-1.1-.98c-.43-.3-.93-.32-1.4-.05-.47.26-1.04.42-1.61.37-.56-.05-1.1-.3-1.37-.73l-.7-1.1c-.26-.43-.5-.96-.48-1.5"/><circle cx="12" cy="12" r="3"/></svg>
+                <span data-i18n="pilotDataTitle">Datos Piloto y Pista</span>
+            </h2>
+            <div class="space-y-4">
+                 <div>
+                    <label for="pilot-name-input" class="block text-xs font-bold text-gray-500 mb-1 uppercase" data-i18n="pilotName">Nombre del Piloto</label>
+                    <input type="text" id="pilot-name-input" value="Racer 1" class="silver-input w-full p-2 rounded-md" />
+                </div>
+                <div>
+                    <label for="car-model-input" class="block text-xs font-bold text-gray-500 mb-1 uppercase" data-i18n="carModel">Modelo del Coche</label>
+                    <input type="text" id="car-model-input" value="Porsche 911" class="silver-input w-full p-2 rounded-md" />
+                </div>
+                
+                <!-- NUEVO: SELECTOR DE MODO -->
+                <div>
+                    <label for="race-mode-select" class="block text-xs font-bold text-blue-700 mb-1 uppercase" data-i18n="raceMode">Modo de Carrera</label>
+                    <select id="race-mode-select" class="silver-input w-full p-2 rounded-md font-bold">
+                        <option value="laps" selected data-i18n="modeLaps">Por Vueltas</option>
+                        <option value="time" data-i18n="modeTime">Por Tiempo</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="track-length-input" class="block text-xs font-bold text-gray-500 mb-1 uppercase" data-i18n="trackLength">Longitud Pista (m)</label>
+                        <input type="number" id="track-length-input" value="15" min="1" step="0.5" class="silver-input w-full p-2 rounded-md" />
+                    </div>
+                    <div>
+                        <!-- MODO VUELTAS (DEFAULT) -->
+                        <div id="laps-config-container">
+                            <label for="lap-limit-select" class="block text-xs font-bold text-gray-500 mb-1 flex items-center uppercase" data-i18n="lapLimit">Límite Vueltas</label>
+                            <select id="lap-limit-select" class="silver-input w-full p-2 rounded-md">
+                                <option value="5" data-i18n="5laps">5 Vueltas</option>
+                                <option value="10" selected data-i18n="10laps">10 Vueltas</option>
+                                <option value="25" data-i18n="25laps">25 Vueltas</option>
+                                <option value="50" data-i18n="50laps">50 Vueltas</option>
+                                <option value="Infinity" data-i18n="infinite">Infinito</option>
+                            </select>
+                        </div>
+                        <!-- MODO TIEMPO (HIDDEN) -->
+                        <div id="time-config-container" class="hidden">
+                            <label for="time-limit-select" class="block text-xs font-bold text-gray-500 mb-1 flex items-center uppercase" data-i18n="timeLimit">Tiempo Límite</label>
+                            <select id="time-limit-select" class="silver-input w-full p-2 rounded-md">
+                                <option value="5">5 Min</option>
+                                <option value="10" selected>10 Min</option>
+                                <option value="15">15 Min</option>
+                                <option value="20">20 Min</option>
+                                <option value="25">25 Min</option>
+                                <option value="30">30 Min</option>
+                                <option value="45">45 Min</option>
+                                <option value="60">60 Min</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <!-- NUEVO: TIEMPO DE SEGURIDAD -->
+                <div>
+                    <label for="safety-time-select" class="block text-xs font-bold text-red-700 mb-1 uppercase flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <span data-i18n="safetyTime">Tiempo de Seguridad (Anti-Rebote)</span>
+                    </label>
+                    <select id="safety-time-select" class="silver-input w-full p-2 rounded-md font-bold">
+                        <option value="1000" data-i18n="1sec">1 Segundo (Pistas muy cortas)</option>
+                        <option value="3000" selected data-i18n="3sec">3 Segundos (Estándar)</option>
+                        <option value="5000" data-i18n="5sec">5 Segundos (Pistas largas)</option>
+                        <option value="10000" data-i18n="10sec">10 Segundos (Circuitos enormes)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-6 mb-4 border-b border-gray-300 pb-2">
+                <h2 class="text-base neon-silver-title flex items-center justify-start mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-2 mr-2 text-gray-500"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                    <span data-i18n="audioSettings">Ajustes de Audio</span>
+                </h2>
+                <div class="flex items-center justify-between mb-4">
+                    <label for="voice-toggle" class="text-sm font-bold text-gray-600" data-i18n="engineerVoice">Voz Ingeniero:</label>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="voice-toggle" id="voice-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-400 appearance-none cursor-pointer" checked/>
+                        <label for="voice-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer border border-gray-400"></label>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label for="soundSelect" class="block text-xs font-bold text-gray-500 mb-1 uppercase" data-i18n="lapTone">Tono de Vuelta</label>
+                    <select id="soundSelect" class="silver-input w-full p-2 rounded-md">
+                        <option value="0" data-i18n="beepClassic">Beep Clásico (600 Hz)</option>
+                        <option value="1" data-i18n="toneLow">Tono Grave (400 Hz)</option>
+                        <option value="2" data-i18n="beepHigh">Beep Agudo (900 Hz)</option>
+                        <option value="3" data-i18n="toneShort">Pito Corto (1200 Hz)</option>
+                    </select>
+                </div>
+            </div>
+
+            <h2 class="text-base neon-silver-title mt-6 mb-3 border-b border-gray-300 pb-2 flex items-center justify-start">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off mr-2 text-gray-500"><path d="M10.5 17.5a6.5 6.5 0 0 0 6-6"/><path d="M2 2l20 20"/><path d="M6.5 13.5a6.5 6.5 0 0 1 6-6"/><path d="M22 12c-.5-1.5-2.5-4.5-5.5-5.5"/><path d="M10 12c0 1 1.5 2 3 2s3-1 3-2"/></svg>
+                <span data-i18n="aiSens">Sensibilidad IA</span>
+            </h2>
+            <label for="threshold-slider" class="block text-sm font-medium text-gray-600 mb-2" data-i18n="sensAdjust">
+                Ajuste de Sensibilidad de Cambio
+            </label>
+            
+            <div class="flex items-center space-x-3">
+                <button id="threshold-minus" class="btn-adjust w-10 h-10 rounded flex items-center justify-center font-bold"> - </button>
+                <div class="flex-1">
+                    <input type="range" id="threshold-slider" min="5" max="100" value="20" class="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer accent-gray-600">
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span data-i18n="verySens">Muy Sensible (5)</span>
+                        <span id="current-threshold" class="font-bold text-gray-800">20</span>
+                        <span data-i18n="lessSens">Poco Sensible (100)</span>
+                    </div>
+                </div>
+                <button id="threshold-plus" class="btn-adjust w-10 h-10 rounded flex items-center justify-center font-bold"> + </button>
+            </div>
+            
+            <p class="text-xs text-gray-500 mt-2" data-i18n="autoCalibHelp">Usa "Auto Calibrar" para que la IA decida el mejor valor por ti.</p>
+        </div>
+        
+        <!-- PANEL DE TIEMPO -->
+        <div class="silver-panel w-full p-4 mb-4 text-center">
+            <div class="flex justify-around items-end space-x-4 mb-2">
+                <div class="flex-1">
+                    <p class="text-xs text-gray-500 font-bold tracking-widest" data-i18n="raceTime">TIEMPO CARRERA</p>
+                    <p id="race-time" class="timer-value font-arial">00:00.000</p>
+                </div>
+                <div class="flex-1 border-l border-gray-400 pl-4 flex flex-col justify-end">
+                    <p class="text-xs text-gray-500 font-bold tracking-widest" data-i18n="laps">VUELTAS</p>
+                    <p id="lap-count" class="timer-value font-arial text-gray-800">0 / 10</p> 
+                    <!-- NUEVO: TARGET DISPLAY FOR TIME MODE -->
+                    <p id="mode-target-display" class="text-xs text-blue-700 font-bold mt-0 font-arial hidden">--</p>
+                </div>
+            </div>
+            <p id="lap-time" class="text-sm text-gray-600 mt-2 font-arial font-bold">00.000</p>
+        </div>
+
+        <div class="w-full flex space-x-3 mb-4">
+            <button id="start-race-btn" class="flex-1 race-control-btn disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="control-icon text-green-700"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span data-i18n="start">INICIAR</span>
+            </button>
+            
+            <button id="central-config-btn" class="flex-1 race-control-btn disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon text-gray-600"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.78 1.35a2 2 0 0 0 .73 2.73l.15.08a2 2 0 0 1 1 1.73v.52a2 2 0 0 1-1 1.73l-.15.08a2 2 0 0 0-.73 2.73l.78 1.35a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V2a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                CONFIG
+            </button>
+            
+            <button id="reset-race-btn" class="flex-1 race-control-btn disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon text-red-700"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                <span data-i18n="reset">REINICIAR</span>
+            </button>
+        </div>
+
+        <div id="video-feed-box" class="silver-panel px-4 py-3 w-full mb-4 relative">
+            <div class="flex justify-between items-center border-b border-gray-300 pb-2 mb-2">
+                <h2 class="text-base neon-silver-title" data-i18n="videoTitle">Video de Pista y ROI</h2>
+                <div class="flex space-x-2">
+                    <button id="calibrate-btn" class="p-2 px-3 rounded-md bg-gray-200 text-gray-700 border border-gray-300 hover:bg-white hover:text-black text-xs font-bold uppercase transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="autoCalib">
+                        Auto Calibrar
+                    </button>
+                    <button id="camera-on-btn" class="p-2 rounded-full bg-gradient-to-br from-green-400 to-green-600 text-white hover:from-green-500 hover:to-green-700 disabled:opacity-50 transition shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    </button>
+                    <button id="camera-off-btn" class="p-2 rounded-full bg-gradient-to-br from-red-400 to-red-600 text-white hover:from-red-500 hover:to-red-700 disabled:opacity-50 transition shadow-md" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera-off"><path d="M2 2l20 20"/><path d="M4.5 17H4a2 2 0 0 1-2-2v-3h18.5"/><path d="M22 15a2 2 0 0 0-2-2h-1l-2.5-3h-2.5"/><path d="M9.5 4h5L17 7h3a2 2 0 0 1 2 2v1"/><path d="M14.5 17a3 3 0 1 1-5.6-2.5"/></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="camera-error-alert" class="hidden bg-red-100 border border-red-400 text-red-700 py-3 rounded-md mb-3">
+                <span id="camera-error-text" class="block sm:inline font-bold text-sm"></span>
+            </div>
+            
+            <div id="record-notification" data-i18n="newRecord">¡NUEVO RÉCORD!</div>
+
+            <div id="video-container">
+                <video id="webcam-feed" class="w-full shadow-inner" autoplay playsinline></video>
+                
+                <!-- NUEVO: OVERLAY DE CALIBRACION -->
+                <div id="calib-overlay" class="calib-overlay">
+                    <div class="spinner"></div>
+                    <h3 class="text-xl font-black uppercase tracking-widest drop-shadow-md" data-i18n="calibrating">Calibrando...</h3>
+                    <p class="text-sm mt-2 font-bold bg-black/50 px-4 py-1 rounded-full" data-i18n="clearTrack">Despeja la pista</p>
+                </div>
+
+                <!-- NUEVO: ALERTA DE SALIDA NULA -->
+                <div id="false-start-alert">
+                    <h2 class="text-3xl font-black uppercase tracking-widest mb-2 text-white drop-shadow-md" data-i18n="falseStart">¡SALIDA NULA!</h2>
+                    <p class="text-xl font-bold text-yellow-300" data-i18n="penalty">Penalización aplicada</p>
+                </div>
+
+                <!-- NUEVO: OVERLAY BANDERA AMARILLA -->
+                <div id="yellow-flag-overlay">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" class="yellow-flag-icon"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+                    <h3 class="text-3xl font-black text-yellow-400 uppercase tracking-widest mt-2" data-i18n="yellowFlag">BANDERA AMARILLA</h3>
+                    <p class="text-white font-bold text-lg" data-i18n="racePaused">CARRERA PAUSADA</p>
+                </div>
+
+                <div id="movable-rectangle">
+                    <div id="detection-val-indicator">Val: 0</div>
+                    <div id="test-msg"></div>
+                    <div id="handle-tl" class="resize-handle"></div>
+                    <div id="handle-br" class="resize-handle"></div>
+                </div>
+            </div>
+            <canvas id="video-canvas"></canvas>
+            <div id="video-status" class="text-center text-sm mt-2 text-gray-500 font-semibold tracking-wide" data-i18n="camLoading">Cargando cámara...</div>
+        </div>
+
+        <!-- TELEMETRIA -->
+        <div class="silver-panel w-full p-4 mb-4">
+            <!-- HEADER DE TELEMETRIA MODIFICADO -->
+            <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
+                <h2 class="text-base neon-silver-title uppercase tracking-widest text-left" data-i18n="telemetry">Telemetría</h2>
+                <button id="pause-btn" class="flex items-center px-3 py-1 rounded-md bg-gray-200 text-gray-700 border border-gray-300 hover:bg-white text-xs font-bold uppercase transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="mr-1"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="mr-1 hidden"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span id="pause-text" data-i18n="pause">PAUSA</span>
+                </button>
+            </div>
+
+            <div class="telemetry-grid">
+                <div class="telemetry-item">
+                    <p class="telemetry-label" data-i18n="pilotCar">PILOTO / COCHE</p>
+                    <p id="telemetry-pilot-car" class="telemetry-data">N/A / N/A</p>
+                </div>
+                <div class="telemetry-item">
+                    <p class="telemetry-label" data-i18n="lastLap">ÚLTIMA VUELTA</p>
+                    <p id="telemetry-last-lap-time" class="telemetry-data yellow font-arial text-lg">--.---</p>
+                </div>
+                <div class="telemetry-item">
+                    <p class="telemetry-label" data-i18n="bestLap">MEJOR VUELTA</p>
+                    <p id="telemetry-best-time" class="telemetry-data green font-arial text-lg">--.---</p>
+                </div>
+                <div class="telemetry-item">
+                    <p class="telemetry-label" data-i18n="avgTime">TIEMPO MEDIO</p>
+                    <p id="telemetry-average-time" class="telemetry-data font-arial text-lg">--.---</p>
+                </div>
+                <div class="telemetry-item">
+                    <p class="telemetry-label" data-i18n="avgSpeed">VELOCIDAD MEDIA (Km/h)</p>
+                    <p id="telemetry-avg-speed" class="telemetry-data text-xl font-arial">--.-</p>
+                </div>
+                <div class="telemetry-item">
+                    <p class="telemetry-label" data-i18n="maxSpeed">VELOCIDAD MÁXIMA (Km/h)</p>
+                    <p id="telemetry-max-speed" class="telemetry-data text-xl font-arial">--.-</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="silver-panel w-full p-4 mb-4">
+            <h2 class="text-base neon-silver-title mb-4 border-b border-gray-300 pb-2 uppercase tracking-widest text-left" data-i18n="timeGraph">Gráfica de Tiempos</h2>
+            <canvas id="lap-graph-canvas"></canvas>
+            <p id="graph-status" class="text-center text-sm text-gray-500 mt-2 italic" data-i18n="noData">Sin datos</p>
+        </div>
+    </div>
+
+    <!-- MODAL DE RESULTADOS FINALES NEON -->
+    <div id="resultsModal" class="modal-overlay hidden">
+        <div class="modal-content p-6 w-full max-w-lg neon-border-box">
+            <div class="text-center mb-6">
+                <div class="inline-block p-3 rounded-full bg-gray-100 mb-3 border border-gray-300 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-500"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14h4"/><path d="M12 17v5"/><path d="M21 17.02l.7-4.14a2 2 0 0 0-1.92-2.14H4.22a2 2 0 0 0-1.92 2.14l.7 4.14"/><path d="M15 17H9"/></svg>
+                </div>
+                <h3 class="text-2xl font-extrabold text-gray-800 uppercase tracking-wider" data-i18n="raceFinished">¡Carrera Finalizada!</h3>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="col-span-2 bg-gray-100 p-3 rounded-lg border border-gray-300 shadow-inner">
+                    <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="pilotCar">Piloto / Coche</div>
+                    <div id="modal-pilot-car" class="text-gray-900 font-bold text-lg truncate"></div>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 shadow-inner">
+                    <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="totalTime">Tiempo Total</div>
+                    <div id="modal-total-time" class="text-gray-800 font-arial font-bold text-lg"></div>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 relative overflow-hidden shadow-inner">
+                    <div class="absolute top-0 right-0 p-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-green-600"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="bestLap">Mejor Vuelta</div>
+                    <div id="modal-best-lap" class="text-green-700 font-arial font-bold text-lg"></div>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 shadow-inner">
+                    <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="avg">Media</div>
+                    <div id="modal-average-time" class="text-gray-800 font-arial font-bold"></div>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 shadow-inner">
+                    <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="avgSpeedSimple">Vel. Media</div>
+                    <div id="modal-avg-speed" class="text-gray-800 font-bold font-arial"></div>
+                </div>
+            </div>
+
+            <div class="mb-6 bg-white rounded-lg border border-gray-300 overflow-hidden shadow-sm">
+                <div class="bg-gray-200 px-4 py-2 border-b border-gray-300">
+                    <h4 class="text-sm font-bold text-gray-600 uppercase tracking-widest" data-i18n="lapDetail">Detalle de Vueltas</h4>
+                </div>
+                <div class="max-h-40 overflow-y-auto">
+                    <table id="lap-history-table" class="w-full text-sm">
+                        <thead class="bg-gray-100 sticky top-0"><tr><th class="text-gray-600 py-2 px-4">#</th><th class="text-gray-600 py-2 px-4" data-i18n="time">Tiempo</th><th class="text-gray-600 py-2 px-4">Km/h</th></tr></thead>
+                        <tbody id="lap-history-body" class="text-gray-700 divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <button id="modal-restart-btn" class="w-full bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center transform hover:scale-[1.02]" data-i18n="restartFull">
+                VOLVER A EMPEZAR
+            </button>
+            <button id="export-excel-btn" class="mt-3 w-full bg-white border border-gray-300 text-gray-600 hover:bg-green-50 hover:text-green-700 hover:border-green-300 font-medium py-2 px-4 rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center text-sm transform hover:scale-[1.01]" data-i18n="exportExcel">
+                Exportar a Excel (.csv)
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE HISTORIAL -->
+    <div id="historyModal" class="modal-overlay hidden">
+        <div class="modal-content p-6 w-full max-w-2xl">
+            <div class="flex justify-between items-center border-b border-gray-300 pb-3 mb-4">
+                <h3 class="text-xl font-bold text-gray-800" data-i18n="historyTitle">Historial de Carreras</h3>
+                <button id="close-history-btn" class="text-gray-500 hover:text-black">X</button>
+            </div>
+            <div class="overflow-y-auto max-h-96">
+                <table class="w-full text-left text-sm">
+                    <thead><tr><th class="p-2 text-gray-700" data-i18n="date">FECHA</th><th class="p-2 text-gray-700" data-i18n="pilotCar">PILOTO/COCHE</th><th class="p-2 text-gray-700" data-i18n="bestLap">MEJOR VUELTA</th><th class="p-2 text-gray-700" data-i18n="avgSpeedSimple">VEL. MEDIA</th></tr></thead>
+                    <tbody id="full-history-body" class="text-gray-800"></tbody>
+                </table>
+                <p id="no-history-msg" class="text-center text-gray-500 mt-4 hidden" data-i18n="noHistory">No hay carreras registradas aún.</p>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button id="open-confirm-btn" class="bg-gray-200 border border-gray-400 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded shadow flex items-center text-sm transition-colors" data-i18n="clearHistory">Borrar Historial</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN BORRADO -->
+    <div id="confirmModal" class="modal-overlay hidden" style="z-index: 200;">
+        <div class="modal-content p-6 w-full max-w-sm text-center">
+            <h3 class="text-lg font-bold text-gray-800" data-i18n="clearHistoryQ">¿Borrar Historial?</h3>
+            <p class="text-gray-600 text-sm mt-2 mb-4" data-i18n="cannotUndo">Esta acción no se puede deshacer.</p>
+            <div class="flex justify-center space-x-3">
+                <button id="cancel-clear-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded font-medium border border-gray-400" data-i18n="cancel">Cancelar</button>
+                <button id="confirm-clear-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold shadow-md" data-i18n="yesClear">Sí, Borrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- TRADUCCIONES ---
+        const translations = {
+            es: {
+                langLabel: "Idioma / Language",
+                history: "Historial",
+                pilotDataTitle: "Datos Piloto y Pista",
+                pilotName: "Nombre del Piloto",
+                carModel: "Modelo del Coche",
+                trackLength: "Longitud Pista (m)",
+                raceMode: "Modo de Carrera",
+                modeLaps: "Por Vueltas",
+                modeTime: "Por Tiempo",
+                lapLimit: "Límite Vueltas",
+                timeLimit: "Tiempo Límite",
+                limitLabel: "Límite",
+                safetyTime: "Tiempo de Seguridad (Anti-Rebote)",
+                audioSettings: "Ajustes de Audio",
+                engineerVoice: "Voz Ingeniero:",
+                lapTone: "Tono de Vuelta",
+                aiSens: "Sensibilidad IA",
+                sensAdjust: "Ajuste de Sensibilidad de Cambio",
+                verySens: "Muy Sensible (5)",
+                lessSens: "Poco Sensible (100)",
+                autoCalibHelp: "Usa \"Auto Calibrar\" para que la IA decida el mejor valor por ti.",
+                raceTime: "TIEMPO CARRERA",
+                laps: "VUELTAS",
+                start: "INICIAR",
+                reset: "REINICIAR",
+                videoTitle: "Video de Pista y ROI",
+                autoCalib: "Auto Calibrar",
+                newRecord: "¡NUEVO RÉCORD!",
+                calibrating: "Calibrando...",
+                clearTrack: "Despeja la pista",
+                falseStart: "¡SALIDA NULA!",
+                penalty: "Penalización aplicada",
+                camLoading: "Cargando cámara...",
+                telemetry: "Telemetría",
+                pilotCar: "PILOTO / COCHE",
+                lastLap: "ÚLTIMA VUELTA",
+                bestLap: "MEJOR VUELTA",
+                avgTime: "TIEMPO MEDIO",
+                avgSpeed: "VELOCIDAD MEDIA (Km/h)",
+                maxSpeed: "VELOCIDAD MÁXIMA (Km/h)",
+                timeGraph: "Gráfica de Tiempos",
+                noData: "Sin datos",
+                raceFinished: "¡Carrera Finalizada!",
+                totalTime: "Tiempo Total",
+                avg: "Media",
+                avgSpeedSimple: "Vel. Media",
+                lapDetail: "Detalle de Vueltas",
+                time: "Tiempo",
+                restartFull: "VOLVER A EMPEZAR",
+                exportExcel: "Exportar a Excel (.csv)",
+                historyTitle: "Historial de Carreras",
+                date: "FECHA",
+                noHistory: "No hay carreras registradas aún.",
+                clearHistory: "Borrar Historial",
+                clearHistoryQ: "¿Borrar Historial?",
+                cannotUndo: "Esta acción no se puede deshacer.",
+                cancel: "Cancelar",
+                yesClear: "Sí, Borrar",
+                pause: "PAUSA",
+                resume: "REANUDAR",
+                yellowFlag: "BANDERA AMARILLA",
+                racePaused: "CARRERA PAUSADA",
+                
+                // Dropdowns
+                "5laps": "5 Vueltas", "10laps": "10 Vueltas", "25laps": "25 Vueltas", "50laps": "50 Vueltas", "infinite": "Infinito",
+                "1sec": "1 Segundo (Pistas muy cortas)", "3sec": "3 Segundos (Estándar)", "5sec": "5 Segundos (Pistas largas)", "10sec": "10 Segundos (Circuitos enormes)",
+                "beepClassic": "Beep Clásico (600 Hz)", "toneLow": "Tono Grave (400 Hz)", "beepHigh": "Beep Agudo (900 Hz)", "toneShort": "Pito Corto (1200 Hz)",
+                
+                // Voces y Dinámicos
+                voiceCalibrated: "Sensores calibrados.",
+                voiceFalseStart: "¡Salida Nula!",
+                voiceFinished: "Carrera finalizada.",
+                voiceLap: "Vuelta",
+                voicePoint: "punto",
+                voiceFastest: "¡Vuelta rápida!",
+                voiceRemaining: "Quedan",
+                voiceLaps: "vueltas",
+                voiceLastLap: "¡Última vuelta!",
+                camActive: "Cámara Activa",
+                camError: "Error Cámara",
+                testWait: "WAIT...",
+                testGo: "GO!",
+                testOk: "TEST OK"
+            },
+            en: {
+                langLabel: "Language / Idioma",
+                history: "History",
+                pilotDataTitle: "Pilot & Track Data",
+                pilotName: "Driver Name",
+                carModel: "Car Model",
+                trackLength: "Track Length (m)",
+                raceMode: "Race Mode",
+                modeLaps: "By Laps",
+                modeTime: "By Time",
+                lapLimit: "Lap Limit",
+                timeLimit: "Time Limit",
+                limitLabel: "Limit",
+                safetyTime: "Safety Time (Debounce)",
+                audioSettings: "Audio Settings",
+                engineerVoice: "Engineer Voice:",
+                lapTone: "Lap Tone",
+                aiSens: "AI Sensitivity",
+                sensAdjust: "Change Sensitivity Adjustment",
+                verySens: "Very Sensitive (5)",
+                lessSens: "Less Sensitive (100)",
+                autoCalibHelp: "Use \"Auto Calibrate\" to let AI decide the best value.",
+                raceTime: "RACE TIME",
+                laps: "LAPS",
+                start: "START",
+                reset: "RESET",
+                videoTitle: "Track Video & ROI",
+                autoCalib: "Auto Calibrate",
+                newRecord: "NEW RECORD!",
+                calibrating: "Calibrating...",
+                clearTrack: "Clear the track",
+                falseStart: "FALSE START!",
+                penalty: "Penalty applied",
+                camLoading: "Loading camera...",
+                telemetry: "Telemetry",
+                pilotCar: "DRIVER / CAR",
+                lastLap: "LAST LAP",
+                bestLap: "BEST LAP",
+                avgTime: "AVERAGE TIME",
+                avgSpeed: "AVG SPEED (Km/h)",
+                maxSpeed: "MAX SPEED (Km/h)",
+                timeGraph: "Lap Graph",
+                noData: "No data",
+                raceFinished: "Race Finished!",
+                totalTime: "Total Time",
+                avg: "Average",
+                avgSpeedSimple: "Avg Speed",
+                lapDetail: "Lap Details",
+                time: "Time",
+                restartFull: "RESTART RACE",
+                exportExcel: "Export to Excel (.csv)",
+                historyTitle: "Race History",
+                date: "DATE",
+                noHistory: "No races recorded yet.",
+                clearHistory: "Clear History",
+                clearHistoryQ: "Clear History?",
+                cannotUndo: "This action cannot be undone.",
+                cancel: "Cancel",
+                yesClear: "Yes, Clear",
+                pause: "PAUSE",
+                resume: "RESUME",
+                yellowFlag: "YELLOW FLAG",
+                racePaused: "RACE PAUSED",
+                
+                 // Dropdowns
+                "5laps": "5 Laps", "10laps": "10 Laps", "25laps": "25 Laps", "50laps": "50 Laps", "infinite": "Infinite",
+                "1sec": "1 Second (Short tracks)", "3sec": "3 Seconds (Standard)", "5sec": "5 Seconds (Long tracks)", "10sec": "10 Seconds (Huge tracks)",
+                "beepClassic": "Classic Beep (600 Hz)", "toneLow": "Low Tone (400 Hz)", "beepHigh": "High Beep (900 Hz)", "toneShort": "Short Whistle (1200 Hz)",
+                
+                // Voces y Dinámicos
+                voiceCalibrated: "Sensors calibrated.",
+                voiceFalseStart: "False Start!",
+                voiceFinished: "Race finished.",
+                voiceLap: "Lap",
+                voicePoint: "point",
+                voiceFastest: "Fastest lap!",
+                voiceRemaining: "Remaining",
+                voiceLaps: "laps",
+                voiceLastLap: "Final lap!",
+                camActive: "Camera Active",
+                camError: "Camera Error",
+                testWait: "WAIT...",
+                testGo: "GO!",
+                testOk: "TEST OK"
+            },
+            fr: {
+                langLabel: "Langue / Language",
+                history: "Historique",
+                pilotDataTitle: "Données Pilote & Piste",
+                pilotName: "Nom du Pilote",
+                carModel: "Modèle de Voiture",
+                trackLength: "Longueur Piste (m)",
+                raceMode: "Mode de Course",
+                modeLaps: "Par Tours",
+                modeTime: "Par Temps",
+                lapLimit: "Limite de Tours",
+                timeLimit: "Temps Limite",
+                limitLabel: "Limite",
+                safetyTime: "Temps de Sécurité (Anti-Rebond)",
+                audioSettings: "Paramètres Audio",
+                engineerVoice: "Voix Ingénieur:",
+                lapTone: "Bip de Tour",
+                aiSens: "Sensibilité IA",
+                sensAdjust: "Réglage de la Sensibilité",
+                verySens: "Très Sensible (5)",
+                lessSens: "Peu Sensible (100)",
+                autoCalibHelp: "Utilisez \"Calibrage Auto\" pour laisser l'IA décider.",
+                raceTime: "TEMPS COURSE",
+                laps: "TOURS",
+                start: "DÉMARRER",
+                reset: "RÉINITIALISER",
+                videoTitle: "Vidéo Piste & ROI",
+                autoCalib: "Calibrage Auto",
+                newRecord: "NOUVEAU RECORD !",
+                calibrating: "Calibrage...",
+                clearTrack: "Dégagez la piste",
+                falseStart: "FAUX DÉPART !",
+                penalty: "Pénalité appliquée",
+                camLoading: "Chargement caméra...",
+                telemetry: "Télémétrie",
+                pilotCar: "PILOTE / VOITURE",
+                lastLap: "DERNIER TOUR",
+                bestLap: "MEILLEUR TOUR",
+                avgTime: "TEMPS MOYEN",
+                avgSpeed: "VITESSE MOYENNE (Km/h)",
+                maxSpeed: "VITESSE MAX (Km/h)",
+                timeGraph: "Graphique des Temps",
+                noData: "Pas de données",
+                raceFinished: "Course Terminée !",
+                totalTime: "Temps Total",
+                avg: "Moyenne",
+                avgSpeedSimple: "Vit. Moyenne",
+                lapDetail: "Détail des Tours",
+                time: "Temps",
+                restartFull: "RECOMMENCER",
+                exportExcel: "Exporter vers Excel (.csv)",
+                historyTitle: "Historique des Courses",
+                date: "DATE",
+                noHistory: "Aucune course enregistrée.",
+                clearHistory: "Effacer l'historique",
+                clearHistoryQ: "Effacer l'historique ?",
+                cannotUndo: "Cette action est irréversible.",
+                cancel: "Annuler",
+                yesClear: "Oui, Effacer",
+                pause: "PAUSE",
+                resume: "REPRENDRE",
+                yellowFlag: "DRAPEAU JAUNE",
+                racePaused: "COURSE PAUSÉE",
+                
+                 // Dropdowns
+                "5laps": "5 Tours", "10laps": "10 Tours", "25laps": "25 Tours", "50laps": "50 Tours", "infinite": "Infini",
+                "1sec": "1 Seconde (Pistes courtes)", "3sec": "3 Secondes (Standard)", "5sec": "5 Secondes (Pistes longues)", "10sec": "10 Secondes (Pistes énormes)",
+                "beepClassic": "Bip Classique (600 Hz)", "toneLow": "Ton Grave (400 Hz)", "beepHigh": "Bip Aigu (900 Hz)", "toneShort": "Sifflet Court (1200 Hz)",
+                
+                // Voces y Dinámicos
+                voiceCalibrated: "Capteurs calibrés.",
+                voiceFalseStart: "Faux départ !",
+                voiceFinished: "Course terminée.",
+                voiceLap: "Tour",
+                voicePoint: "virgule",
+                voiceFastest: "Meilleur tour !",
+                voiceRemaining: "Restant",
+                voiceLaps: "tours",
+                voiceLastLap: "Dernier tour !",
+                camActive: "Caméra Active",
+                camError: "Erreur Caméra",
+                testWait: "WAIT...",
+                testGo: "GO!",
+                testOk: "TEST OK"
+            }
+        };
+
+        let currentLang = 'es';
+
+        // --- ELEMENTOS UI ---
+        const videoElement = document.getElementById('webcam-feed');
+        const videoContainer = document.getElementById('video-container');
+        const movableRectangle = document.getElementById('movable-rectangle');
+        const handleTL = document.getElementById('handle-tl');
+        const handleBR = document.getElementById('handle-br');
+        const cameraOnBtn = document.getElementById('camera-on-btn');
+        const cameraOffBtn = document.getElementById('camera-off-btn');
+        const calibrateBtn = document.getElementById('calibrate-btn');
+        const videoStatus = document.getElementById('video-status');
+        const cameraErrorAlert = document.getElementById('camera-error-alert');
+        const cameraErrorText = document.getElementById('camera-error-text');
+        const startRaceBtn = document.getElementById('start-race-btn');
+        const resetRaceBtn = document.getElementById('reset-race-btn');
+        const centralConfigBtn = document.getElementById('central-config-btn');
+        const configPanel = document.getElementById('config-panel');
+        const resultsModal = document.getElementById('resultsModal');
+        const modalRestartBtn = document.getElementById('modal-restart-btn');
+        const exportExcelBtn = document.getElementById('export-excel-btn');
+        const thresholdSlider = document.getElementById('threshold-slider');
+        const currentThresholdDisplay = document.getElementById('current-threshold');
+        const thresholdMinusBtn = document.getElementById('threshold-minus');
+        const thresholdPlusBtn = document.getElementById('threshold-plus');
+        const trackLengthInput = document.getElementById('track-length-input');
+        const lapLimitSelect = document.getElementById('lap-limit-select');
+        const timeLimitSelect = document.getElementById('time-limit-select');
+        const raceModeSelect = document.getElementById('race-mode-select');
+        const lapsConfigContainer = document.getElementById('laps-config-container');
+        const timeConfigContainer = document.getElementById('time-config-container');
+        const safetyTimeSelect = document.getElementById('safety-time-select');
+        const pilotNameInput = document.getElementById('pilot-name-input');
+        const carModelInput = document.getElementById('car-model-input');
+        const calibOverlay = document.getElementById('calib-overlay');
+        const falseStartAlert = document.getElementById('false-start-alert');
+        const testMsg = document.getElementById('test-msg');
+        const langSelect = document.getElementById('lang-select');
+        const pauseBtn = document.getElementById('pause-btn');
+        const iconPause = document.getElementById('icon-pause');
+        const iconPlay = document.getElementById('icon-play');
+        const pauseText = document.getElementById('pause-text');
+        const yellowFlagOverlay = document.getElementById('yellow-flag-overlay');
+        const modeTargetDisplay = document.getElementById('mode-target-display');
+        
+        // --- TELEMETRIA UI ---
+        const telemetryPilotCar = document.getElementById('telemetry-pilot-car');
+        const telemetryLastLapTime = document.getElementById('telemetry-last-lap-time');
+        const telemetryBestTime = document.getElementById('telemetry-best-time');
+        const telemetryAverageTime = document.getElementById('telemetry-average-time');
+        const telemetryMaxSpeed = document.getElementById('telemetry-max-speed');
+        const telemetryAvgSpeed = document.getElementById('telemetry-avg-speed');
+        const graphCanvas = document.getElementById('lap-graph-canvas');
+        const graphCtx = graphCanvas.getContext('2d');
+        const graphStatus = document.getElementById('graph-status');
+        
+        // --- HISTORIAL UI ---
+        const historyBtn = document.getElementById('history-btn');
+        const historyModal = document.getElementById('historyModal');
+        const closeHistoryBtn = document.getElementById('close-history-btn');
+        const fullHistoryBody = document.getElementById('full-history-body');
+        const openConfirmBtn = document.getElementById('open-confirm-btn');
+        const noHistoryMsg = document.getElementById('no-history-msg');
+        const confirmModal = document.getElementById('confirmModal');
+        const cancelClearBtn = document.getElementById('cancel-clear-btn');
+        const confirmClearBtn = document.getElementById('confirm-clear-btn');
+        
+        // --- OTROS ---
+        const voiceToggle = document.getElementById('voice-toggle');
+        const detectionValIndicator = document.getElementById('detection-val-indicator');
+        const recordNotification = document.getElementById('record-notification');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const fsIconEnter = document.getElementById('fs-icon-enter');
+        const fsIconExit = document.getElementById('fs-icon-exit');
+
+        // --- ESTADO Y VARIABLES GLOBALES (IA) ---
+        let cameraStream = null;
+        let isProcessing = false;
+        let raceIntervalId = null;
+        let lapIntervalId = null;
+        let isRaceActive = false;
+        let isCountdown = false; 
+        let raceAborted = false;
+        let isCalibrating = false;
+        
+        // --- PAUSE STATE ---
+        let isPaused = false;
+        let pauseStartTime = 0;
+
+        // Detección Inteligente
+        let baseBrightness = null;
+        let sensitivity = 20; 
+        let blindTimeMs = 3000;
+        let isLineBlocked = false; // Flag para debounce
+        let needsClearance = false; // NUEVO: Bandera de "espera a limpiar sensor"
+        let lastRecordTime = 0;
+        let lapStartTimestamp = 0;
+        let hasCrossedStart = false; // NUEVO: Bandera de cruce inicial
+        let stuckFrameCount = 0; // NUEVO: Contador de seguridad anti-bloqueo
+        
+        // Carrera
+        let raceStartTime = 0;
+        let currentLap = 0;
+        let totalLaps = 10; 
+        let raceMode = 'laps'; // 'laps' or 'time'
+        let raceTimeLimit = 0; // In ms
+        let finalRaceTimeMs = 0; 
+        let lapHistory = [];
+        let bestLapTime = Infinity;
+        let totalLapTime = 0;
+        let currentAverageTime = 0;
+        let maxSpeed = 0.0;
+        let avgSpeed = 0.0;
+        let lastCompletedLapTime = 0;
+
+        // Audio
+        const soundOptions = [
+            { name: "Beep Clásico", freq: 600, dur: 0.1 },
+            { name: "Tono Grave", freq: 400, dur: 0.2 },
+            { name: "Beep Agudo", freq: 900, dur: 0.08 },
+            { name: "Pito Corto", freq: 1200, dur: 0.05 }
+        ];
+        let selectedSoundIndex = 0; 
+        const synth = new Tone.Synth().toDestination();
+        const polySynth = new Tone.PolySynth(Tone.Synth).toDestination();
+
+        // --- MANEJO DE ROI DRAG/RESIZE ---
+        let isDragging = false;
+        let isResizing = false;
+        let resizeDirection = '';
+        let startX, startY;
+        let startLeftPct, startTopPct, startWidthPct, startHeightPct;
+
+        function getClientCoords(e) { return { x: e.touches ? e.touches[0].clientX : e.clientX, y: e.touches ? e.touches[0].clientY : e.clientY }; }
+        function getRoiPercentage(prop) { const style = movableRectangle.style[prop]; return style ? parseFloat(style.replace('%', '')) : 0; }
+
+        function startAction(e, type, dir = '') {
+            if (movableRectangle.style.display === 'none' || isRaceActive || isCalibrating) return;
+            e.preventDefault();
+            const coords = getClientCoords(e);
+            startX = coords.x; startY = coords.y;
+            startLeftPct = getRoiPercentage('left'); startTopPct = getRoiPercentage('top');
+            startWidthPct = getRoiPercentage('width'); startHeightPct = getRoiPercentage('height');
+            movableRectangle.style.transition = 'none';
+            if (e.pointerId !== undefined) e.target.setPointerCapture(e.pointerId);
+            if (type === 'drag') { isDragging = true; movableRectangle.classList.add('dragging'); }
+            else { isResizing = true; resizeDirection = dir; document.body.classList.add('resizing-nwse'); }
+            document.addEventListener('pointermove', moveAction);
+            document.addEventListener('pointerup', endAction);
+            document.addEventListener('pointercancel', endAction);
+        }
+
+        function moveAction(e) {
+            if (!isDragging && !isResizing) return;
+            e.preventDefault();
+            const coords = getClientCoords(e);
+            const dx = coords.x - startX; const dy = coords.y - startY;
+            const videoRect = videoContainer.getBoundingClientRect();
+            const dxPct = (dx / videoRect.width) * 100; const dyPct = (dy / videoRect.height) * 100;
+            const minSize = 5;
+
+            if (isDragging) {
+                let nl = Math.max(0, Math.min(startLeftPct + dxPct, 100 - startWidthPct));
+                let nt = Math.max(0, Math.min(startTopPct + dyPct, 100 - startHeightPct));
+                movableRectangle.style.left = `${nl}%`; movableRectangle.style.top = `${nt}%`;
+            } else if (isResizing) {
+                if (resizeDirection === 'tl') {
+                    let nw = startWidthPct - dxPct; let nh = startHeightPct - dyPct;
+                    let nl = startLeftPct + dxPct; let nt = startTopPct + dyPct;
+                    if (nw >= minSize && nl >= 0) { movableRectangle.style.left = `${nl}%`; movableRectangle.style.width = `${nw}%`; }
+                    if (nh >= minSize && nt >= 0) { movableRectangle.style.top = `${nt}%`; movableRectangle.style.height = `${nh}%`; }
+                } else if (resizeDirection === 'br') {
+                    let nw = Math.max(minSize, startWidthPct + dxPct); let nh = Math.max(minSize, startHeightPct + dyPct);
+                    if (startLeftPct + nw <= 100) movableRectangle.style.width = `${nw}%`;
+                    if (startTopPct + nh <= 100) movableRectangle.style.height = `${nh}%`;
+                }
+            }
+        }
+
+        function endAction(e) {
+            if (isDragging || isResizing) {
+                if (e.target.hasPointerCapture(e.pointerId)) e.target.releasePointerCapture(e.pointerId);
+                movableRectangle.style.transition = 'all 0.1s ease';
+                isDragging = false; isResizing = false;
+                movableRectangle.classList.remove('dragging');
+                document.body.classList.remove('resizing-nwse');
+                document.removeEventListener('pointermove', moveAction);
+                document.removeEventListener('pointerup', endAction);
+                document.removeEventListener('pointercancel', endAction);
+            }
+        }
+
+        movableRectangle.addEventListener('pointerdown', e => { if (!e.target.classList.contains('resize-handle')) startAction(e, 'drag'); });
+        handleTL.addEventListener('pointerdown', e => startAction(e, 'resize', 'tl'));
+        handleBR.addEventListener('pointerdown', e => startAction(e, 'resize', 'br'));
+
+        // --- LÓGICA DE VISIÓN (IA) ---
+        function getROIBrightness() {
+            const vw = videoElement.videoWidth; const vh = videoElement.videoHeight;
+            if(!vw || !vh) return 0;
+            
+            const l = Math.floor(vw * (getRoiPercentage('left')/100));
+            const t = Math.floor(vh * (getRoiPercentage('top')/100));
+            const w = Math.ceil(vw * (getRoiPercentage('width')/100));
+            const h = Math.ceil(vh * (getRoiPercentage('height')/100));
+            
+            const canvas = document.getElementById('video-canvas');
+            canvas.width = vw; canvas.height = vh; 
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(videoElement, l, t, w, h, 0, 0, w, h); 
+            
+            try {
+                const data = ctx.getImageData(0, 0, w, h).data;
+                let sum = 0;
+                for (let i = 0; i < data.length; i += 16) {
+                    sum += (data[i] + data[i+1] + data[i+2]); 
+                }
+                return (sum / 3) / (data.length / 16);
+            } catch(e) { return 0; }
+        }
+
+        function processVideo() {
+            if (!isProcessing) return;
+            
+            if (isPaused) {
+                requestAnimationFrame(processVideo); // Mantener loop pero no procesar
+                return;
+            }
+
+            const currentBri = getROIBrightness();
+            
+            detectionValIndicator.textContent = `Brillo: ${currentBri.toFixed(0)}`;
+            
+            if (baseBrightness === null) baseBrightness = currentBri;
+            
+            const diff = Math.abs(currentBri - baseBrightness);
+            const crossed = diff > sensitivity;
+
+            // Visual Logic: Detección Inmediata
+            if (crossed) {
+                movableRectangle.classList.add('roi-detected');
+            } else {
+                movableRectangle.classList.remove('roi-detected');
+                // Adaptación continua si no está bloqueado
+                if (!isCalibrating && !isLineBlocked) { 
+                    baseBrightness = (baseBrightness * 0.95) + (currentBri * 0.05);
+                }
+            }
+
+            if (!isCalibrating) {
+                // TEST MODE
+                if (!isRaceActive && !isCountdown) {
+                    testMsg.style.display = crossed ? 'block' : 'none';
+                    testMsg.textContent = translations[currentLang].testOk;
+                }
+                
+                // SALIDA NULA
+                if (isCountdown && crossed && !raceAborted) {
+                    handleFalseStart();
+                }
+
+                // CARRERA ACTIVA
+                if (isRaceActive) {
+                    const now = Date.now();
+                    
+                    if (isLineBlocked) {
+                        // --- ESTADO BLOQUEADO (GRIS) ---
+                        // Estamos dentro del tiempo de seguridad
+                        if (now - lastRecordTime < blindTimeMs) {
+                            movableRectangle.classList.add('roi-locked');
+                            movableRectangle.classList.remove('roi-detected');
+                            testMsg.style.display = "block";
+                            testMsg.textContent = translations[currentLang].testWait;
+                        } else {
+                            // --- ESTADO LIMPIEZA ---
+                            // El tiempo ha pasado, pero... ¿está limpio el sensor?
+                            if (crossed) {
+                                // NO está limpio. MANTENER BLOQUEO para evitar rebote falso.
+                                // Forzar adaptación rápida para "acostumbrarse" a la nueva luz/obstáculo.
+                                movableRectangle.classList.add('roi-locked');
+                                baseBrightness = (baseBrightness * 0.9) + (currentBri * 0.1);
+                            } else {
+                                // SÍ está limpio. LIBERAR.
+                                movableRectangle.classList.remove('roi-locked');
+                                isLineBlocked = false; 
+                                testMsg.style.display = "none";
+                            }
+                        }
+                    } else {
+                        // --- ESTADO VIGILANCIA ---
+                        // Sensor libre, esperando coche.
+                        if (crossed) {
+                            // ¡Coche detectado!
+                            if (!hasCrossedStart) {
+                                // Primera vez (Salida real)
+                                hasCrossedStart = true;
+                                lapStartTimestamp = now; 
+                                lastRecordTime = now;    
+                                isLineBlocked = true;
+                                
+                                testMsg.textContent = translations[currentLang].testGo;
+                                testMsg.style.display = "block";
+                                setTimeout(() => { if(isRaceActive) testMsg.style.display = 'none'; }, 1000);
+                                polySynth.triggerAttackRelease(["C5", "G5"], "0.1");
+                            } else {
+                                // Vuelta normal
+                                recordLap(); // Esto pondrá isLineBlocked = true
+                            }
+                        }
+                    }
+                }
+            }
+            requestAnimationFrame(processVideo);
+        }
+
+        // --- CALIBRACIÓN AUTO ---
+        async function runAutoCalibration() {
+            if (!isProcessing) return;
+            isCalibrating = true;
+            calibOverlay.classList.add('active');
+            calibrateBtn.disabled = true;
+
+            let samples = 0;
+            let sum = 0;
+            let min = 255, max = 0;
+            const frames = 60; 
+
+            function sample() {
+                const b = getROIBrightness();
+                sum += b;
+                if(b < min) min = b;
+                if(b > max) max = b;
+                samples++;
+                
+                if (samples < frames) {
+                    requestAnimationFrame(sample);
+                } else {
+                    finishCalib(sum/frames, min, max);
+                }
+            }
+            sample();
+        }
+
+        function finishCalib(avg, min, max) {
+            baseBrightness = avg;
+            const noise = Math.max(max - avg, avg - min);
+            const safeMargin = 15;
+            const newSens = Math.max(safeMargin, Math.ceil(noise * 1.5));
+            
+            sensitivity = newSens;
+            thresholdSlider.value = newSens;
+            currentThresholdDisplay.textContent = newSens;
+            
+            isCalibrating = false;
+            calibOverlay.classList.remove('active');
+            calibrateBtn.disabled = false;
+            
+            speak(translations[currentLang].voiceCalibrated);
+        }
+
+        // --- LÓGICA DE CARRERA ---
+        function handleFalseStart() {
+            raceAborted = true;
+            isCountdown = false;
+            polySynth.triggerAttackRelease(["C2", "F#2"], "1");
+            falseStartAlert.classList.add('show');
+            speak(translations[currentLang].voiceFalseStart);
+            resetRaceBtn.disabled = false;
+
+            // Auto-hide after 2 seconds
+            setTimeout(() => {
+                falseStartAlert.classList.remove('show');
+            }, 2000);
+        }
+
+        function recordLap() {
+            const now = Date.now();
+            
+            if (now - lastRecordTime < blindTimeMs) return; 
+            
+            isLineBlocked = true; 
+            lastRecordTime = now;
+            
+            const completedLapTime = now - lapStartTimestamp;
+            const lapSpeed = calculateSpeed(completedLapTime);
+            
+            const lapData = { lap: currentLap + 1, time: completedLapTime, speed: lapSpeed };
+            lapHistory.push(lapData);
+            lastCompletedLapTime = completedLapTime;
+            
+            const isBest = calculateStats(completedLapTime, lapSpeed);
+            currentLap++;
+            
+            let extraMsg = "";
+            let remaining = totalLaps !== Infinity ? totalLaps - currentLap : Infinity;
+            if (remaining === 5) extraMsg = `${translations[currentLang].voiceRemaining} 5 ${translations[currentLang].voiceLaps}.`;
+            if (remaining === 1) { extraMsg = translations[currentLang].voiceLastLap; playFinalLapSound(); }
+            
+            const snd = soundOptions[selectedSoundIndex];
+            playSound(snd.freq, snd.dur);
+            announceLap(currentLap, completedLapTime, isBest, extraMsg);
+            
+            if(isBest && currentLap > 1) {
+                recordNotification.classList.add('show');
+                setTimeout(()=>recordNotification.classList.remove('show'), 2000);
+            }
+            
+            document.getElementById('lap-time').textContent = formatTime(completedLapTime, false);
+            updateLapDisplay();
+            
+            // Check win condition for LAPS mode
+            if (raceMode === 'laps' && totalLaps !== Infinity && currentLap >= totalLaps) {
+                stopRace(true);
+            } else {
+                lapStartTimestamp = now; 
+            }
+        }
+        
+        function calculateStats(time, speed) {
+            let best = false;
+            if (time < bestLapTime) { bestLapTime = time; best = true; }
+            totalLapTime += time;
+            currentAverageTime = totalLapTime / lapHistory.length;
+            if (speed > maxSpeed) maxSpeed = speed;
+            avgSpeed = lapHistory.reduce((a,b)=>a+b.speed,0) / lapHistory.length;
+            updateTelemetryDisplay();
+            return best;
+        }
+
+        function updateTelemetryDisplay() {
+            telemetryPilotCar.textContent = `${pilotNameInput.value} / ${carModelInput.value}`;
+            telemetryLastLapTime.textContent = lastCompletedLapTime ? formatTime(lastCompletedLapTime, false) : "--.---";
+            telemetryBestTime.textContent = bestLapTime !== Infinity ? formatTime(bestLapTime, false) : "--.---";
+            telemetryAverageTime.textContent = currentAverageTime ? formatTime(currentAverageTime, false) : "--.---";
+            telemetryAvgSpeed.textContent = avgSpeed.toFixed(1);
+            telemetryMaxSpeed.textContent = maxSpeed.toFixed(1);
+            drawLapGraph();
+        }
+
+        function startTimers(isResume = false) {
+            if (raceIntervalId) clearInterval(raceIntervalId);
+            
+            // Solo reseteamos los tiempos si NO es una reanudación
+            if (!isResume) {
+                raceStartTime = Date.now();
+                lapStartTimestamp = raceStartTime;
+            }
+            
+            raceIntervalId = setInterval(() => {
+                finalRaceTimeMs = Date.now() - raceStartTime;
+                document.getElementById('race-time').textContent = formatTime(finalRaceTimeMs, true);
+                
+                // CHECK TIME LIMIT FOR TIME ATTACK MODE
+                if (raceMode === 'time' && finalRaceTimeMs >= raceTimeLimit) {
+                    stopRace(true);
+                }
+            }, 50);
+            
+            if (lapIntervalId) clearInterval(lapIntervalId);
+            lapIntervalId = setInterval(() => {
+                const elap = Date.now() - lapStartTimestamp;
+                document.getElementById('lap-time').textContent = formatTime(elap, false);
+            }, 30);
+        }
+
+        async function startTrafficLight() {
+            // FIX PARA iOS (iPhone): Desbloquear explícitamente el motor de audio con la acción del clic del usuario
+            if (Tone.context.state !== 'running') {
+                await Tone.start();
+            }
+
+            if (voiceToggle.checked && window.speechSynthesis.paused) window.speechSynthesis.resume();
+            
+            configPanel.classList.remove('open');
+            
+            // LECTURA DE CONFIGURACION
+            raceMode = raceModeSelect.value;
+            
+            if (raceMode === 'laps') {
+                const val = lapLimitSelect.value;
+                totalLaps = val === 'Infinity' ? Infinity : parseInt(val);
+                raceTimeLimit = 0;
+            } else {
+                // TIME MODE
+                totalLaps = Infinity; // Infinite laps until time stops
+                const mins = parseInt(timeLimitSelect.value);
+                raceTimeLimit = mins * 60 * 1000;
+            }
+            
+            updateLapDisplay(); 
+
+            startRaceBtn.disabled = true; resetRaceBtn.disabled = true;
+            falseStartAlert.classList.remove('show');
+            blindTimeMs = parseInt(safetyTimeSelect.value); 
+            
+            const lights = [1,2,3,4,5].map(i => document.getElementById(`light-${i}`));
+            lights.forEach(l => l.className = "light");
+
+            isCountdown = true; raceAborted = false;
+            hasCrossedStart = false; 
+            isLineBlocked = false; 
+            
+            for (let i = 0; i < 5; i++) {
+                if(raceAborted) return;
+                lights[i].classList.add('red');
+                synth.triggerAttackRelease("C4", "8n");
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            
+            if(raceAborted) return;
+            await new Promise(r => setTimeout(r, Math.random() * 1000 + 500));
+            
+            if(raceAborted) return;
+            isCountdown = false;
+            
+            lights.forEach(l => { l.classList.remove('red'); l.classList.add('green'); });
+            polySynth.triggerAttackRelease(["C5", "E5", "G5"], "0.5");
+            
+            isRaceActive = true;
+            isPaused = false;
+            pauseBtn.disabled = false; // Habilitar pausa
+            updatePauseUI();
+            
+            startTimers(false); // False porque es una carrera nueva
+            resetRaceBtn.disabled = false;
+            
+            lastRecordTime = Date.now() - blindTimeMs; 
+        }
+        
+        // --- PAUSE LOGIC ---
+        function togglePause() {
+            if (!isRaceActive) return;
+
+            if (!isPaused) {
+                // START PAUSE
+                isPaused = true;
+                pauseStartTime = Date.now();
+                clearInterval(raceIntervalId);
+                clearInterval(lapIntervalId);
+                
+                // Show Yellow Flag
+                yellowFlagOverlay.classList.add('active');
+            } else {
+                // RESUME
+                isPaused = false;
+                const pauseDuration = Date.now() - pauseStartTime;
+                
+                // Adjust start times so calculations remain valid
+                raceStartTime += pauseDuration;
+                lapStartTimestamp += pauseDuration;
+                lastRecordTime += pauseDuration; 
+                
+                startTimers(true); // True indica que es RESUME, no resetear tiempos
+                
+                // Hide Yellow Flag
+                yellowFlagOverlay.classList.remove('active');
+            }
+            updatePauseUI();
+        }
+
+        function updatePauseUI() {
+             const t = translations[currentLang];
+             if (isPaused) {
+                 pauseText.textContent = t.resume;
+                 pauseBtn.classList.remove('bg-gray-200', 'text-gray-700', 'border-gray-300');
+                 pauseBtn.classList.add('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
+                 iconPause.classList.add('hidden');
+                 iconPlay.classList.remove('hidden');
+             } else {
+                 pauseText.textContent = t.pause;
+                 pauseBtn.classList.add('bg-gray-200', 'text-gray-700', 'border-gray-300');
+                 pauseBtn.classList.remove('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
+                 iconPause.classList.remove('hidden');
+                 iconPlay.classList.add('hidden');
+             }
+        }
+
+        function stopRace(finished = false) {
+            isRaceActive = false; isCountdown = false; hasCrossedStart = false; isPaused = false;
+            pauseBtn.disabled = true; // Deshabilitar pausa
+            yellowFlagOverlay.classList.remove('active'); // Asegurar quitar bandera amarilla
+            updatePauseUI();
+
+            if (raceIntervalId) clearInterval(raceIntervalId);
+            if (lapIntervalId) clearInterval(lapIntervalId);
+            
+            if (finished) {
+                saveRaceToHistory();
+                announceRaceFinish(pilotNameInput.value);
+                document.getElementById('modal-pilot-car').textContent = `${pilotNameInput.value} / ${carModelInput.value}`;
+                document.getElementById('modal-total-time').textContent = formatTime(finalRaceTimeMs, true);
+                document.getElementById('modal-best-lap').textContent = formatTime(bestLapTime, false);
+                document.getElementById('modal-average-time').textContent = formatTime(currentAverageTime, false);
+                document.getElementById('modal-avg-speed').textContent = `${avgSpeed.toFixed(1)} Km/h`;
+                
+                const tbody = document.getElementById('lap-history-body'); tbody.innerHTML = '';
+                lapHistory.forEach(l => {
+                    const row = document.createElement('tr');
+                    if(l.time === bestLapTime) row.className = "bg-green-100 font-bold";
+                    row.innerHTML = `<td class="py-2 px-4">${l.lap}</td><td class="py-2 px-4">${(l.time/1000).toFixed(3)}</td><td class="py-2 px-4">${l.speed.toFixed(1)}</td>`;
+                    tbody.appendChild(row);
+                });
+                resultsModal.classList.remove('hidden');
+                setTimeout(()=>resultsModal.classList.add('open'),10);
+            } else {
+                // LECTURA FORZADA DEL DOM AL REINICIAR
+                // Reset simple vars
+                currentLap = 0; lapHistory = []; bestLapTime = Infinity; totalLapTime = 0;
+                currentAverageTime = 0; maxSpeed = 0; avgSpeed = 0; lastCompletedLapTime = 0;
+                document.getElementById('race-time').textContent = "00:00.000";
+                document.getElementById('lap-time').textContent = "00.000";
+                
+                // Re-read settings just in case
+                raceMode = raceModeSelect.value;
+                if (raceMode === 'laps') {
+                    const val = lapLimitSelect.value;
+                    totalLaps = val === 'Infinity' ? Infinity : parseInt(val);
+                } else {
+                    totalLaps = Infinity;
+                }
+                
+                updateLapDisplay();
+                updateTelemetryDisplay();
+                const lights = [1,2,3,4,5].map(i => document.getElementById(`light-${i}`));
+                lights.forEach(l => l.className = "light");
+            }
+            startRaceBtn.disabled = false; resetRaceBtn.disabled = true;
+        }
+
+        // --- UTILS ---
+        function updateLapDisplay() { 
+            const t = translations[currentLang];
+            const maxLapsText = totalLaps === Infinity ? '∞' : totalLaps;
+            
+            if (raceMode === 'time') {
+                document.getElementById('lap-count').textContent = currentLap;
+                const mins = timeLimitSelect.value;
+                modeTargetDisplay.textContent = `${t.limitLabel}: ${mins} min`;
+                modeTargetDisplay.classList.remove('hidden');
+            } else {
+                document.getElementById('lap-count').textContent = `${currentLap} / ${maxLapsText}`; 
+                modeTargetDisplay.classList.add('hidden');
+            }
+        }
+        
+        function calculateSpeed(ms) { 
+            const dist = parseFloat(trackLengthInput.value); 
+            return ms > 0 ? (dist / (ms/1000)) * 3.6 : 0; 
+        }
+        function playSound(freq, dur) { if(Tone.context.state !== 'running') Tone.context.resume(); synth.triggerAttackRelease(freq, dur); }
+        function playFinalLapSound() { if(Tone.context.state !== 'running') Tone.context.resume(); polySynth.triggerAttackRelease(["G5", "C6"], "0.2"); }
+        function formatTime(ms, full) {
+            if (ms === Infinity || ms <= 0) return full ? "00:00.000" : "--.---";
+            const min = Math.floor(ms/60000); const sec = Math.floor((ms%60000)/1000); const mil = Math.floor(ms%1000);
+            return full ? `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(mil).padStart(3,'0')}` : `${String(sec).padStart(2,'0')}.${String(mil).padStart(3,'0')}`;
+        }
+        
+        // HELPER PARA HABLAR MEJORADO
+        function speak(text) {
+            if(voiceToggle.checked) {
+                // Cancelar cualquier audio anterior
+                window.speechSynthesis.cancel();
+                
+                const u = new SpeechSynthesisUtterance(text);
+                
+                // Definir el código de idioma BCP 47
+                let langCode = 'es-ES';
+                if (currentLang === 'en') langCode = 'en-US';
+                else if (currentLang === 'fr') langCode = 'fr-FR';
+                
+                u.lang = langCode;
+                
+                // INTENTO DE FORZAR LA VOZ CORRECTA
+                const voices = window.speechSynthesis.getVoices();
+                // Buscar una voz que coincida exactamente con el idioma
+                let voice = voices.find(v => v.lang === langCode);
+                
+                // Si no hay exacta, buscar una que empiece por el idioma (ej: es-MX para es-ES)
+                if (!voice) {
+                    voice = voices.find(v => v.lang.startsWith(langCode.substring(0, 2)));
+                }
+                
+                // Si encontramos voz, la asignamos. Si no, confiamos en el u.lang
+                if (voice) {
+                    u.voice = voice;
+                }
+
+                window.speechSynthesis.speak(u);
+            }
+        }
+        
+        function announceRaceFinish(name) { speak(`${translations[currentLang].voiceFinished} ${name}`); }
+        function announceLap(n, t, best, xtra) {
+            if(!voiceToggle.checked || n<=0) return;
+            const sec = Math.floor(t/1000); const dec = (t%1000).toString().padStart(3,'0');
+            // Construccion dinamica "5 punto 320"
+            let txt = `${sec} ${translations[currentLang].voicePoint} ${dec}`;
+            if(best && n>1) txt = translations[currentLang].voiceFastest + " " + txt;
+            if(xtra) txt += ". " + xtra;
+            speak(txt);
+        }
+
+        // --- DRAW GRAPH ---
+        function drawLapGraph() {
+            const w = graphCanvas.parentElement.offsetWidth - 32; graphCanvas.width = w; graphCanvas.height = 200;
+            if (!lapHistory.length) { graphCtx.clearRect(0,0,w,200); graphStatus.textContent=translations[currentLang].noData; return; }
+            graphStatus.textContent="";
+            const times = lapHistory.map(l=>l.time);
+            const max = Math.max(...times); const min = Math.min(...times);
+            const range = max-min || 1; 
+            const pad = 20; const gw = w-pad*2; const gh = 200-pad*2;
+            const barW = (gw / times.length) - 5;
+            
+            graphCtx.clearRect(0,0,w,200);
+            times.forEach((t, i) => {
+                const h = gh * 0.7; // Default height
+                const normalizedH = range===0 ? h : (gh * (1 - (t-min)/range)*0.8 + gh*0.2);
+                const x = pad + i * (barW + 5); const y = 200 - pad - normalizedH;
+                
+                graphCtx.fillStyle = (t===bestLapTime) ? '#059669' : '#6b7280';
+                graphCtx.fillRect(x, y, barW, normalizedH);
+                graphCtx.fillStyle = '#374151'; graphCtx.font='10px Arial'; graphCtx.textAlign='center';
+                graphCtx.fillText(i+1, x+barW/2, 195);
+            });
+        }
+        
+        // --- EXPORTAR / HISTORIAL ---
+        function exportToExcel() {
+            if(!lapHistory.length) return;
+            let csv = `\uFEFFKRONO REPORTE\n${translations[currentLang].date};${translations[currentLang].pilotCar};${translations[currentLang].totalTime};${translations[currentLang].bestLap};${translations[currentLang].avgSpeedSimple}\n`;
+            csv += `${new Date().toLocaleString()};${pilotNameInput.value};${carModelInput.value};${formatTime(finalRaceTimeMs,true)};${formatTime(bestLapTime,false)};${avgSpeed.toFixed(2)}\n\n${translations[currentLang].laps};${translations[currentLang].time};KMH\n`;
+            lapHistory.forEach(l => csv += `${l.lap};${(l.time/1000).toFixed(3).replace('.',',')};${l.speed.toFixed(2).replace('.',',')}\n`);
+            const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a"); link.href = url; link.download = `krono_${Date.now()}.csv`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+        
+        function saveRaceToHistory() {
+            const rec = { date: new Date().toLocaleString(), pilot: pilotNameInput.value, car: carModelInput.value, bestLap: formatTime(bestLapTime,false), avgSpeed: avgSpeed.toFixed(1) };
+            let h = JSON.parse(localStorage.getItem('scx_history')||'[]'); h.unshift(rec); if(h.length>50) h.pop();
+            localStorage.setItem('scx_history', JSON.stringify(h));
+        }
+        
+        function loadHistory() {
+            const h = JSON.parse(localStorage.getItem('scx_history')||'[]');
+            fullHistoryBody.innerHTML = '';
+            if(!h.length) noHistoryMsg.classList.remove('hidden');
+            else {
+                noHistoryMsg.classList.add('hidden');
+                h.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td class="p-2 text-xs">${r.date}</td><td class="p-2 font-bold">${r.pilot}<br><span class="text-xs font-normal">${r.car}</span></td><td class="p-2 text-green-700">${r.bestLap}</td><td class="p-2">${r.avgSpeed}</td>`;
+                    fullHistoryBody.appendChild(tr);
+                });
+            }
+        }
+
+        // --- CAMBIO DE IDIOMA ---
+        function updateTexts() {
+            const t = translations[currentLang];
+            // Actualizar elementos con data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) {
+                    if (el.tagName === 'INPUT' && el.type !== 'range') {
+                        // placeholder si fuera necesario
+                    } else if (el.tagName === 'OPTION') {
+                        el.textContent = t[key];
+                    } else {
+                        el.textContent = t[key];
+                    }
+                }
+            });
+            // Actualizar status manuales
+            videoStatus.textContent = t.camLoading;
+            graphStatus.textContent = lapHistory.length ? "" : t.noData;
+            // Update Pause Button Text if needed (not captured by data-i18n during dynamic switch)
+            if (isPaused) {
+                pauseText.textContent = t.resume;
+            } else {
+                pauseText.textContent = t.pause;
+            }
+            updateLapDisplay();
+        }
+
+        langSelect.addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            updateTexts();
+            // Guardar preferencia
+            localStorage.setItem('krono_lang', currentLang);
+        });
+        
+        // --- CAMBIO DE MODO ---
+        raceModeSelect.addEventListener('change', (e) => {
+            const mode = e.target.value;
+            if (mode === 'laps') {
+                lapsConfigContainer.classList.remove('hidden');
+                timeConfigContainer.classList.add('hidden');
+            } else {
+                lapsConfigContainer.classList.add('hidden');
+                timeConfigContainer.classList.remove('hidden');
+            }
+            // Trigger visual update for lap count immediately
+            raceMode = mode;
+            updateLapDisplay();
+        });
+        
+        timeLimitSelect.addEventListener('change', updateLapDisplay);
+
+
+        // --- EVENTOS ---
+        startRaceBtn.addEventListener('click', startTrafficLight);
+        resetRaceBtn.addEventListener('click', () => stopRace(false));
+        centralConfigBtn.addEventListener('click', () => configPanel.classList.toggle('open'));
+        modalRestartBtn.addEventListener('click', () => { resultsModal.classList.remove('open'); setTimeout(()=>resultsModal.classList.add('hidden'),300); stopRace(false); });
+        
+        cameraOnBtn.addEventListener('click', async () => {
+            try {
+                const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+                cameraStream = s; videoElement.srcObject = s;
+                videoElement.play(); movableRectangle.style.display='block';
+                isProcessing=true; processVideo(); calibrateBtn.disabled=false;
+                videoStatus.textContent=translations[currentLang].camActive; videoStatus.className="text-center text-sm mt-2 text-green-600 font-bold";
+                cameraOnBtn.disabled=true; cameraOffBtn.disabled=false;
+            } catch(e) { videoStatus.textContent=translations[currentLang].camError; }
+        });
+        cameraOffBtn.addEventListener('click', () => {
+            if(cameraStream) cameraStream.getTracks().forEach(t=>t.stop());
+            cameraStream=null; isProcessing=false; videoElement.srcObject=null; movableRectangle.style.display='none';
+            cameraOnBtn.disabled=false; cameraOffBtn.disabled=true; calibrateBtn.disabled=true;
+        });
+        calibrateBtn.addEventListener('click', runAutoCalibration);
+        pauseBtn.addEventListener('click', togglePause);
+
+        thresholdSlider.addEventListener('input', () => { sensitivity = parseInt(thresholdSlider.value); currentThresholdDisplay.textContent = sensitivity; });
+        thresholdMinusBtn.addEventListener('click', () => { if(sensitivity>5) sensitivity--; thresholdSlider.value=sensitivity; currentThresholdDisplay.textContent=sensitivity; });
+        thresholdPlusBtn.addEventListener('click', () => { if(sensitivity<100) sensitivity++; thresholdSlider.value=sensitivity; currentThresholdDisplay.textContent=sensitivity; });
+        
+        lapLimitSelect.addEventListener('change', () => {
+            if (raceModeSelect.value === 'laps') {
+                totalLaps = lapLimitSelect.value === 'Infinity' ? Infinity : parseInt(lapLimitSelect.value);
+                updateLapDisplay();
+            }
+        });
+
+        historyBtn.addEventListener('click', () => { loadHistory(); historyModal.classList.remove('hidden'); setTimeout(()=>historyModal.classList.add('open'),10); });
+        closeHistoryBtn.addEventListener('click', () => { historyModal.classList.remove('open'); setTimeout(()=>historyModal.classList.add('hidden'),300); });
+        openConfirmBtn.addEventListener('click', () => { confirmModal.classList.remove('hidden'); setTimeout(()=>confirmModal.classList.add('open'),10); });
+        cancelClearBtn.addEventListener('click', () => { confirmModal.classList.remove('open'); setTimeout(()=>confirmModal.classList.add('hidden'),300); });
+        confirmClearBtn.addEventListener('click', () => { localStorage.removeItem('scx_history'); loadHistory(); confirmModal.classList.remove('open'); setTimeout(()=>confirmModal.classList.add('hidden'),300); });
+        exportExcelBtn.addEventListener('click', exportToExcel);
+        
+        // --- LOGICA PANTALLA COMPLETA ---
+        function toggleFullScreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+
+            const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+            if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+                if (requestFullScreen) {
+                    requestFullScreen.call(docEl);
+                } else {
+                    // Fallback simple para móviles que no soportan la API
+                    alert("Tu navegador no soporta el modo pantalla completa. Usa 'Añadir a pantalla de inicio'.");
+                }
+            } else {
+                if (cancelFullScreen) {
+                    cancelFullScreen.call(doc);
+                }
+            }
+        }
+
+        function updateFsIcons() {
+            const isFs = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+            if (isFs) {
+                fsIconEnter.classList.add('hidden');
+                fsIconExit.classList.remove('hidden');
+            } else {
+                fsIconEnter.classList.remove('hidden');
+                fsIconExit.classList.add('hidden');
+            }
+        }
+        
+        fullscreenBtn.addEventListener('click', toggleFullScreen);
+        document.addEventListener('fullscreenchange', updateFsIcons);
+        document.addEventListener('webkitfullscreenchange', updateFsIcons);
+        document.addEventListener('mozfullscreenchange', updateFsIcons);
+        document.addEventListener('MSFullscreenChange', updateFsIcons);
+
+        // Pre-cargar voces
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+        }
+
+        // Init
+        window.onload = () => {
+            // Forzar carga de voces al inicio
+            window.speechSynthesis.getVoices();
+
+            if (!movableRectangle.style.left) movableRectangle.style.left = '25%';
+            if (!movableRectangle.style.top) movableRectangle.style.top = '25%';
+            if (!movableRectangle.style.width) movableRectangle.style.width = '50%';
+            if (!movableRectangle.style.height) movableRectangle.style.height = '50%';
+            
+            // Cargar Idioma
+            const savedLang = localStorage.getItem('krono_lang');
+            if (savedLang) {
+                currentLang = savedLang;
+                langSelect.value = savedLang;
+                updateTexts();
+            }
+
+            // FIX: ASEGURAR SINCRONIZACION AL CARGAR LA PAGINA
+            totalLaps = lapLimitSelect.value === 'Infinity' ? Infinity : parseInt(lapLimitSelect.value);
+
+            sensitivity = 20; thresholdSlider.value=20; currentThresholdDisplay.textContent=20;
+            updateLapDisplay(); stopRace(false);
+            const snd = document.getElementById('soundSelect');
+            snd.addEventListener('change', e => { selectedSoundIndex=parseInt(e.target.value); playSound(soundOptions[selectedSoundIndex].freq, 0.1); });
+        };
+    </script>
+</body>
+</html>
