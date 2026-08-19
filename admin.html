@@ -29,6 +29,18 @@
         </div>
     </div>
 
+    <!-- ALERTA DE CONFIRMACIÓN PARA BORRAR -->
+    <div id="custom-confirm" class="hidden fixed inset-0 bg-slate-900/90 z-[100] flex flex-col items-center justify-center p-4">
+        <div class="glass p-6 rounded-xl border border-slate-500/50 w-full max-w-sm text-center shadow-2xl">
+            <i class="fas fa-trash-alt text-4xl text-red-500 mb-4"></i>
+            <p class="text-white text-sm mb-6">¿Seguro que deseas eliminar esta licencia de forma permanente?</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirm()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded-lg transition border border-slate-500">CANCELAR</button>
+                <button onclick="executeDelete()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-lg transition border border-red-500">ELIMINAR</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 1. PANTALLA DE BLOQUEO -->
     <div id="login-overlay" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-4">
         <div class="glass p-8 rounded-2xl w-full max-w-sm text-center shadow-2xl border border-slate-700">
@@ -108,10 +120,15 @@
 
         <!-- HISTORIAL -->
         <div class="glass p-5 rounded-xl border border-slate-700">
-            <h3 class="text-xs font-bold text-slate-400 uppercase mb-4">Licencias Generadas</h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xs font-bold text-slate-400 uppercase">Licencias Generadas</h3>
+                <button onclick="copyAllEmails()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded text-[10px] font-bold border border-slate-500 transition shadow">
+                    <i class="fas fa-copy mr-1"></i> Copiar Correos
+                </button>
+            </div>
             <div class="overflow-x-auto">
                 <table class="history-table">
-                    <thead><tr><th>EMAIL</th><th>CÓDIGO</th><th>ESTADO</th></tr></thead>
+                    <thead><tr><th>EMAIL</th><th>CÓDIGO</th><th>ESTADO</th><th></th></tr></thead>
                     <tbody id="history-body"></tbody>
                 </table>
             </div>
@@ -124,7 +141,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // Función personalizada para alertas
@@ -133,27 +150,75 @@
             document.getElementById('custom-alert').classList.remove('hidden');
         };
 
+        // --- FUNCIONES DE BORRADO Y COPIA ---
+        let docToDelete = null;
+        window.confirmDelete = function(id) {
+            docToDelete = id;
+            document.getElementById('custom-confirm').classList.remove('hidden');
+        };
+        window.closeConfirm = function() {
+            docToDelete = null;
+            document.getElementById('custom-confirm').classList.add('hidden');
+        };
+        window.executeDelete = async function() {
+            if (!docToDelete) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'access_codes', docToDelete));
+                window.closeConfirm();
+            } catch (error) {
+                console.error("Error borrando:", error);
+                window.showAlert("Error al borrar: " + error.message);
+                window.closeConfirm();
+            }
+        };
+
+        window.copyAllEmails = function() {
+            if (!window.currentEmails || window.currentEmails.length === 0) {
+                return window.showAlert("No hay correos para copiar.");
+            }
+            const text = window.currentEmails.join(", ");
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                window.showAlert("¡" + window.currentEmails.length + " correos copiados al portapapeles!");
+            } catch (err) {
+                window.showAlert("No se pudo copiar automáticamente.");
+            }
+            document.body.removeChild(textArea);
+        };
+
         // DATOS FIJOS SILVER
         const PRECIO = "5€";
-        const APP_ID = "app_krono"; // ID DE KRONO PERSONAL
+        const APP_ID = "app_krono"; // RESTAURADO: ID FIJO PARA RECUPERAR TUS DATOS
         
         // Detectar URL de la App
         const BASE_URL = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
         const CLIENT_URL = `${BASE_URL}/index.html`; 
 
         const firebaseConfig = {
-          apiKey: "AIzaSyDW-2Yc4kvZJYbNOVeesPZWdRThYe0noUI",
-          authDomain: "correo-95e58.firebaseapp.com",
-          projectId: "correo-95e58",
-          storageBucket: "correo-95e58.firebasestorage.app",
-          messagingSenderId: "977860532946",
-          appId: "1:977860532946:web:3738c6b7165201bce7ab0b",
-          measurementId: "G-6DMG51VQ92"
+            apiKey: "AIzaSyDW-2Yc4kvZJYbNOVeesPZWdRThYe0noUI",
+            authDomain: "correo-95e58.firebaseapp.com",
+            projectId: "correo-95e58",
+            storageBucket: "correo-95e58.firebasestorage.app",
+            messagingSenderId: "977860532946",
+            appId: "1:977860532946:web:3738c6b7165201bce7ab0b",
+            measurementId: "G-6DMG51VQ92"
         };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        
+        let app, db, auth;
+        try {
+            // Forzar conexión estricta a tu proyecto personal para evitar errores de permisos
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            document.getElementById('auth-status').textContent = "Error Init: " + error.message;
+            document.getElementById('auth-status').className = "text-xs text-red-500 mt-2";
+        }
 
         // --- SEGURIDAD AUTOMÁTICA ---
         (async function initSecurity() {
@@ -171,7 +236,7 @@
         // --- SEGURIDAD LOGIN (CONTRASEÑA SIMPLE) ---
         window.checkPass = function() {
             const pass = document.getElementById('admin-pass').value;
-            if(pass === "admin123") {
+            if(pass === "admin123") { // Nota: Contraseña de prueba simple
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('main-panel').classList.remove('hidden');
                 
@@ -184,8 +249,13 @@
         }
         window.logout = function() { location.reload(); }
 
+        // --- STREAMING_CHUNK:Fetching statistics... ---
         // --- ESTADÍSTICAS CORREGIDAS ---
         function initStats() {
+            if (!auth.currentUser) {
+                setTimeout(initStats, 500); // Reintentar si la autenticación aún no termina
+                return; 
+            }
             try {
                 // Se añade 'general' para referirse a un documento específico válido
                 onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'stats', 'general'), (docSnap) => {
@@ -203,26 +273,78 @@
             }
         }
 
+        // --- STREAMING_CHUNK:Loading history... ---
         // --- HISTORIAL DE LICENCIAS ---
         function loadHistory() {
+            if (!auth.currentUser) {
+                setTimeout(loadHistory, 500); // Reintentar si la autenticación aún no termina
+                return; 
+            }
             try {
+                // Fetch all documents from the access_codes collection
                 onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'access_codes'), (snap) => {
                     const body = document.getElementById('history-body');
                     body.innerHTML = "";
-                    snap.docs.forEach(d => {
-                        const data = d.data();
+                    window.currentEmails = []; // Reiniciamos la lista global
+                    
+                    if (snap.empty) {
+                        body.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-slate-500">No hay licencias generadas aún.</td></tr>';
+                        return;
+                    }
+
+                    // Sort documents by createdAt locally, newest first
+                    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    docs.sort((a, b) => {
+                        const dateA = new Date(a.createdAt || 0).getTime();
+                        const dateB = new Date(b.createdAt || 0).getTime();
+                        return dateB - dateA; // Descending order
+                    });
+
+                    docs.forEach(data => {
+                        if (data.email) {
+                            window.currentEmails.push(data.email); // Guardamos para el botón de copiar
+                        }
+                        
+                        // Format date if available
+                        let dateStr = '';
+                        if (data.createdAt) {
+                            const d = new Date(data.createdAt);
+                            dateStr = `<div class="text-[9px] text-slate-500">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
+                        }
+
+                        // Determine status display
+                        let statusHtml = '-';
+                        if (data.current_session) {
+                             statusHtml = '<span class="text-emerald-400 font-bold">Activo</span>';
+                        } else if (data.active !== undefined) {
+                             statusHtml = data.active ? '<span class="text-blue-400">Generada</span>' : '<span class="text-red-400">Inactiva</span>';
+                        }
+
                         body.innerHTML += `<tr>
-                            <td>${data.email}</td>
-                            <td class="font-mono text-slate-300 font-bold">${data.code}</td>
-                            <td>${data.current_session ? 'Activo' : '-'}</td>
+                            <td class="truncate max-w-[120px] relative group" title="${data.email}">
+                                ${data.email}
+                                ${dateStr}
+                            </td>
+                            <td class="font-mono text-slate-300 font-bold text-xs">${data.code}</td>
+                            <td class="text-xs">${statusHtml}</td>
+                            <td class="text-right">
+                                <button onclick="confirmDelete('${data.id}')" class="text-slate-500 hover:text-red-500 transition text-sm p-1" title="Eliminar Licencia">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
                         </tr>`;
                     });
+                }, (error) => {
+                     console.error("Error cargando historial snapshot:", error);
+                     const body = document.getElementById('history-body');
+                     body.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-400">Error cargando historial: ${error.message}</td></tr>`;
                 });
             } catch(e) {
                 console.error("Error cargando historial:", e);
             }
         }
 
+        // --- STREAMING_CHUNK:Handling UI actions... ---
         // --- FASE 1: ENVIAR DATOS DE PAGO ---
         window.sendPaymentRequest = function() {
             const email = document.getElementById('client-email-1').value;
@@ -239,6 +361,11 @@
 
         // --- FASE 2: GENERAR Y GUARDAR ---
         window.generateAndSave = async function() {
+            if (!auth.currentUser) {
+                 showAlert("Debes estar autenticado para guardar.");
+                 return;
+            }
+
             const email = document.getElementById('client-email-2').value.trim();
             const btn = document.getElementById('btn-save');
             const status = document.getElementById('status');
@@ -257,7 +384,7 @@
             for(let i=0; i<3; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
 
             try {
-                // Escritura segura
+                // Escritura segura en ruta estricta (Regla 1)
                 await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'access_codes'), {
                     email: email, 
                     code: code, 
