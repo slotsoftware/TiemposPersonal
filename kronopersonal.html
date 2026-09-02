@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KRONO V.3.0 - Voice Fix</title>
+    <title>KRONO V.3.0 - Race Mode</title>
     
     <!-- METADATOS PWA Y PERMISOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="KRONO V.2">
-    <meta name="application-name" content="KRONO V.2">
+    <meta name="apple-mobile-web-app-title" content="KRONO V.3">
+    <meta name="application-name" content="KRONO V.3">
     <meta http-equiv="Permissions-Policy" content="camera=(self)">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -69,7 +69,6 @@
         
         input, select { user-select: text; -webkit-user-select: text; }
         
-        /* Clases para Paneles Plateados Brillantes */
         .silver-panel {
             background: linear-gradient(to bottom, #9ca3af 0%, #e5e7eb 40%, #ffffff 100%);
             border: 1px solid rgba(255, 255, 255, 0.4);
@@ -144,10 +143,9 @@
         }
         .roi-locked #test-msg { display: block; content: "WAIT..."; color: #ccc; text-shadow: none; font-size: 12px;}
 
-        /* --- MANIJAS TÁCTILES MEJORADAS (AREA 44px, VISUAL 14px) --- */
         .resize-handle {
             position: absolute; 
-            width: 44px; height: 44px; /* Area tactil */
+            width: 44px; height: 44px; 
             background: transparent;
             z-index: 20; 
             touch-action: none; 
@@ -156,7 +154,7 @@
         
         .resize-handle::after {
             content: '';
-            width: 14px; height: 14px; /* Visual */
+            width: 14px; height: 14px; 
             background-color: #ffffff; 
             border: 1px solid #9ca3af; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.4); 
@@ -231,12 +229,6 @@
         #central-config-btn:hover:not(:disabled) { background: linear-gradient(180deg, #f3f4f6 0%, #d1d5db 100%); }
         
         .control-icon { width: 20px; height: 20px; margin-bottom: 4px; }
-        @media (max-width: 640px) {
-            .light { width: 20px; height: 20px; }
-            .traffic-light-container.five-lights { gap: 5px; }
-            .header-flex { flex-direction: column; }
-            #webcam-feed { max-height: 200px; }
-        }
         
         #lap-graph-canvas {
             width: 100%; height: 200px; background: #e5e7eb; 
@@ -263,9 +255,7 @@
         table { width: 100%; text-align: left; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 8px; border-bottom: 1px solid #d1d5db; font-family: Arial, sans-serif; font-size: 0.85rem; color: #374151; }
         th { color: #111827; text-transform: uppercase; font-weight: 800; border-bottom: 2px solid #9ca3af; }
-        @media (max-width: 400px) { th, td { font-size: 0.75rem; padding: 4px; } }
         
-        /* TEST MESSAGE IN ROI */
         #test-msg {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             color: #10b981; font-weight: 900; font-size: 16px; text-transform: uppercase;
@@ -292,7 +282,6 @@
         }
         .btn-adjust:active { background: #d1d5db; box-shadow: inset 0 2px 2px rgba(0,0,0,0.1); }
         
-        /* --- NUEVOS ESTILOS PARA V2 --- */
         .calib-overlay {
             position: absolute; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.8); color: #fff; display: flex;
@@ -319,7 +308,6 @@
         #false-start-alert.show { display: block; animation: pulse 0.5s infinite alternate; }
         @keyframes pulse { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.05); } }
 
-        /* --- BANDERA AMARILLA (PAUSA) --- */
         #yellow-flag-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
@@ -330,6 +318,42 @@
         #yellow-flag-overlay.active { display: flex; }
         .yellow-flag-icon { width: 64px; height: 64px; color: #facc15; animation: wave 1s infinite ease-in-out; }
         @keyframes wave { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
+        
+        /* --- MODO CARRERA INMERSIVO (PANTALLA COMPLETA REAL SIN BORDES) --- */
+        body.race-mode-active { background: #000; overflow: hidden; }
+        body.race-mode-active .container { max-width: 100%; padding: 0; margin: 0; height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Ocultar todos los paneles innecesarios */
+        body.race-mode-active #config-panel, 
+        body.race-mode-active #telemetry-panel, 
+        body.race-mode-active #graph-panel, 
+        body.race-mode-active .video-controls-header { display: none !important; }
+        
+        /* Cabecera: Ocultar titulo e historial, pero mantener estructura para semáforo */
+        body.race-mode-active .header-flex { background: transparent; border: none; box-shadow: none; margin: 0; padding: 0; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 60; width: auto;}
+        body.race-mode-active .header-flex > div:first-child { display: none; }
+        body.race-mode-active #traffic-light-module { background: rgba(0,0,0,0.6); padding: 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); }
+        
+        /* Flotar el Cronómetro sobre el vídeo */
+        body.race-mode-active .timer-panel-container { position: absolute; top: 90px; left: 50%; transform: translateX(-50%); z-index: 60; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); width: auto; min-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); backdrop-filter: blur(5px); margin: 0;}
+        body.race-mode-active .timer-value { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        body.race-mode-active .timer-panel-container p.text-gray-500, 
+        body.race-mode-active .timer-panel-container p.text-gray-600 { color: #ddd !important; }
+        
+        /* Flotar y ajustar Botonera de Control */
+        body.race-mode-active .race-controls-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 60; display: flex; gap: 15px; width: 90%; max-width: 400px; margin: 0; }
+        body.race-mode-active #start-race-btn, body.race-mode-active #central-config-btn { display: none !important; }
+        body.race-mode-active #main-pause-btn { display: flex !important; flex: 1; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        body.race-mode-active #reset-race-btn { flex: 1; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        
+        /* Expandir Vídeo al 100% de la pantalla */
+        body.race-mode-active #video-feed-box { flex: 1; display: flex; flex-direction: column; padding: 0; border: none; background: transparent; box-shadow: none; margin: 0; width: 100%; height: 100vh; position: absolute; top:0; left:0; z-index: 10;}
+        body.race-mode-active #video-container { flex: 1; border: none; border-radius: 0; box-shadow: none; height: 100vh;}
+        body.race-mode-active #webcam-feed { height: 100vh; width: 100vw; object-fit: cover; max-height: none; }
+        
+        #main-pause-btn.race-control-btn { color: #ca8a04; border-bottom: 3px solid #ca8a04; display: none; }
+        #main-pause-btn.race-control-btn:hover:not(:disabled) { background: linear-gradient(180deg, #fef08a 0%, #fde047 100%); }
+        #main-pause-btn.is-paused { background: linear-gradient(180deg, #fef08a 0%, #facc15 100%) !important; color: #854d0e !important; border-bottom: 3px solid #854d0e !important; }
     </style>
 </head>
 <body>
@@ -366,7 +390,6 @@
         
         <!-- CONFIG PANEL SILVER -->
         <div id="config-panel" class="silver-panel w-full mb-4">
-            <!-- LANGUAGE SELECTOR ADDED HERE (Unobtrusive) -->
             <div class="mb-4 border-b border-gray-300 pb-2">
                  <div class="flex items-center justify-between">
                      <label for="lang-select" class="text-xs font-bold text-gray-500 uppercase flex items-center">
@@ -395,7 +418,6 @@
                     <input type="text" id="car-model-input" value="Porsche 911" class="silver-input w-full p-2 rounded-md" />
                 </div>
                 
-                <!-- NUEVO: SELECTOR DE MODO -->
                 <div>
                     <label for="race-mode-select" class="block text-xs font-bold text-blue-700 mb-1 uppercase" data-i18n="raceMode">Modo de Carrera</label>
                     <select id="race-mode-select" class="silver-input w-full p-2 rounded-md font-bold">
@@ -410,7 +432,6 @@
                         <input type="number" id="track-length-input" value="15" min="1" step="0.5" class="silver-input w-full p-2 rounded-md" />
                     </div>
                     <div>
-                        <!-- MODO VUELTAS (DEFAULT) -->
                         <div id="laps-config-container">
                             <label for="lap-limit-select" class="block text-xs font-bold text-gray-500 mb-1 flex items-center uppercase" data-i18n="lapLimit">Límite Vueltas</label>
                             <select id="lap-limit-select" class="silver-input w-full p-2 rounded-md">
@@ -421,7 +442,6 @@
                                 <option value="Infinity" data-i18n="infinite">Infinito</option>
                             </select>
                         </div>
-                        <!-- MODO TIEMPO (HIDDEN) -->
                         <div id="time-config-container" class="hidden">
                             <label for="time-limit-select" class="block text-xs font-bold text-gray-500 mb-1 flex items-center uppercase" data-i18n="timeLimit">Tiempo Límite</label>
                             <select id="time-limit-select" class="silver-input w-full p-2 rounded-md">
@@ -437,7 +457,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- NUEVO: TIEMPO DE SEGURIDAD -->
                 <div>
                     <label for="safety-time-select" class="block text-xs font-bold text-red-700 mb-1 uppercase flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -500,7 +519,7 @@
         </div>
         
         <!-- PANEL DE TIEMPO -->
-        <div class="silver-panel w-full p-4 mb-4 text-center">
+        <div class="silver-panel w-full p-4 mb-4 text-center timer-panel-container">
             <div class="flex justify-around items-end space-x-4 mb-2">
                 <div class="flex-1">
                     <p class="text-xs text-gray-500 font-bold tracking-widest" data-i18n="raceTime">TIEMPO CARRERA</p>
@@ -509,17 +528,22 @@
                 <div class="flex-1 border-l border-gray-400 pl-4 flex flex-col justify-end">
                     <p class="text-xs text-gray-500 font-bold tracking-widest" data-i18n="laps">VUELTAS</p>
                     <p id="lap-count" class="timer-value font-arial text-gray-800">0 / 10</p> 
-                    <!-- NUEVO: TARGET DISPLAY FOR TIME MODE -->
                     <p id="mode-target-display" class="text-xs text-blue-700 font-bold mt-0 font-arial hidden">--</p>
                 </div>
             </div>
             <p id="lap-time" class="text-sm text-gray-600 mt-2 font-arial font-bold">00.000</p>
         </div>
 
-        <div class="w-full flex space-x-3 mb-4">
+        <div class="w-full flex space-x-3 mb-4 race-controls-container">
             <button id="start-race-btn" class="flex-1 race-control-btn disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="control-icon text-green-700"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 <span data-i18n="start">INICIAR</span>
+            </button>
+            
+            <button id="main-pause-btn" class="flex-1 race-control-btn disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg id="main-icon-pause" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="control-icon"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                <svg id="main-icon-play" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="control-icon hidden"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span id="main-pause-text" data-i18n="pause">PAUSA</span>
             </button>
             
             <button id="central-config-btn" class="flex-1 race-control-btn disabled:opacity-50 disabled:cursor-not-allowed">
@@ -534,7 +558,7 @@
         </div>
 
         <div id="video-feed-box" class="silver-panel px-4 py-3 w-full mb-4 relative">
-            <div class="flex justify-between items-center border-b border-gray-300 pb-2 mb-2">
+            <div class="flex justify-between items-center border-b border-gray-300 pb-2 mb-2 video-controls-header">
                 <h2 class="text-base neon-silver-title" data-i18n="videoTitle">Video de Pista y ROI</h2>
                 <div class="flex space-x-2">
                     <button id="calibrate-btn" class="p-2 px-3 rounded-md bg-gray-200 text-gray-700 border border-gray-300 hover:bg-white hover:text-black text-xs font-bold uppercase transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="autoCalib">
@@ -542,6 +566,10 @@
                     </button>
                     <button id="camera-on-btn" class="p-2 rounded-full bg-gradient-to-br from-green-400 to-green-600 text-white hover:from-green-500 hover:to-green-700 disabled:opacity-50 transition shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    </button>
+                    <!-- BOTÓN LINTERNA -->
+                    <button id="torch-btn" class="p-2 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed transition shadow-md" title="Encender Linterna" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flashlight"><path d="M18 6c0 2-2 2-2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10c0-2-2-2-2-4V2h12v4Z"/><line x1="6" x2="18" y1="6" y2="6"/><line x1="12" x2="12" y1="12" y2="12"/></svg>
                     </button>
                     <button id="camera-off-btn" class="p-2 rounded-full bg-gradient-to-br from-red-400 to-red-600 text-white hover:from-red-500 hover:to-red-700 disabled:opacity-50 transition shadow-md" disabled>
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera-off"><path d="M2 2l20 20"/><path d="M4.5 17H4a2 2 0 0 1-2-2v-3h18.5"/><path d="M22 15a2 2 0 0 0-2-2h-1l-2.5-3h-2.5"/><path d="M9.5 4h5L17 7h3a2 2 0 0 1 2 2v1"/><path d="M14.5 17a3 3 0 1 1-5.6-2.5"/></svg>
@@ -558,20 +586,17 @@
             <div id="video-container">
                 <video id="webcam-feed" class="w-full shadow-inner" autoplay playsinline></video>
                 
-                <!-- NUEVO: OVERLAY DE CALIBRACION -->
                 <div id="calib-overlay" class="calib-overlay">
                     <div class="spinner"></div>
                     <h3 class="text-xl font-black uppercase tracking-widest drop-shadow-md" data-i18n="calibrating">Calibrando...</h3>
                     <p class="text-sm mt-2 font-bold bg-black/50 px-4 py-1 rounded-full" data-i18n="clearTrack">Despeja la pista</p>
                 </div>
 
-                <!-- NUEVO: ALERTA DE SALIDA NULA -->
                 <div id="false-start-alert">
                     <h2 class="text-3xl font-black uppercase tracking-widest mb-2 text-white drop-shadow-md" data-i18n="falseStart">¡SALIDA NULA!</h2>
                     <p class="text-xl font-bold text-yellow-300" data-i18n="penalty">Penalización aplicada</p>
                 </div>
 
-                <!-- NUEVO: OVERLAY BANDERA AMARILLA -->
                 <div id="yellow-flag-overlay">
                     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" class="yellow-flag-icon"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
                     <h3 class="text-3xl font-black text-yellow-400 uppercase tracking-widest mt-2" data-i18n="yellowFlag">BANDERA AMARILLA</h3>
@@ -590,8 +615,7 @@
         </div>
 
         <!-- TELEMETRIA -->
-        <div class="silver-panel w-full p-4 mb-4">
-            <!-- HEADER DE TELEMETRIA MODIFICADO -->
+        <div id="telemetry-panel" class="silver-panel w-full p-4 mb-4">
             <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
                 <h2 class="text-base neon-silver-title uppercase tracking-widest text-left" data-i18n="telemetry">Telemetría</h2>
                 <button id="pause-btn" class="flex items-center px-3 py-1 rounded-md bg-gray-200 text-gray-700 border border-gray-300 hover:bg-white text-xs font-bold uppercase transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
@@ -629,7 +653,7 @@
             </div>
         </div>
 
-        <div class="silver-panel w-full p-4 mb-4">
+        <div id="graph-panel" class="silver-panel w-full p-4 mb-4">
             <h2 class="text-base neon-silver-title mb-4 border-b border-gray-300 pb-2 uppercase tracking-widest text-left" data-i18n="timeGraph">Gráfica de Tiempos</h2>
             <canvas id="lap-graph-canvas"></canvas>
             <p id="graph-status" class="text-center text-sm text-gray-500 mt-2 italic" data-i18n="noData">Sin datos</p>
@@ -670,6 +694,12 @@
                     <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="avgSpeedSimple">Vel. Media</div>
                     <div id="modal-avg-speed" class="text-gray-800 font-bold font-arial"></div>
                 </div>
+            </div>
+
+            <!-- GRAFICA EN EL MODAL DE RESULTADOS -->
+            <div class="mb-6 bg-white rounded-lg border border-gray-300 shadow-sm p-3">
+                <h4 class="text-xs font-bold text-gray-500 uppercase mb-2" data-i18n="timeGraph">Gráfica de Tiempos</h4>
+                <canvas id="modal-lap-graph-canvas" class="w-full h-32 bg-gray-50 rounded border border-gray-200"></canvas>
             </div>
 
             <div class="mb-6 bg-white rounded-lg border border-gray-300 overflow-hidden shadow-sm">
@@ -792,12 +822,10 @@
                 yellowFlag: "BANDERA AMARILLA",
                 racePaused: "CARRERA PAUSADA",
                 
-                // Dropdowns
                 "5laps": "5 Vueltas", "10laps": "10 Vueltas", "25laps": "25 Vueltas", "50laps": "50 Vueltas", "infinite": "Infinito",
                 "1sec": "1 Segundo (Pistas muy cortas)", "3sec": "3 Segundos (Estándar)", "5sec": "5 Segundos (Pistas largas)", "10sec": "10 Segundos (Circuitos enormes)",
                 "beepClassic": "Beep Clásico (600 Hz)", "toneLow": "Tono Grave (400 Hz)", "beepHigh": "Beep Agudo (900 Hz)", "toneShort": "Pito Corto (1200 Hz)",
                 
-                // Voces y Dinámicos
                 voiceCalibrated: "Sensores calibrados.",
                 voiceFalseStart: "¡Salida Nula!",
                 voiceFinished: "Carrera finalizada.",
@@ -877,12 +905,10 @@
                 yellowFlag: "YELLOW FLAG",
                 racePaused: "RACE PAUSED",
                 
-                 // Dropdowns
                 "5laps": "5 Laps", "10laps": "10 Laps", "25laps": "25 Laps", "50laps": "50 Laps", "infinite": "Infinite",
                 "1sec": "1 Second (Short tracks)", "3sec": "3 Seconds (Standard)", "5sec": "5 Seconds (Long tracks)", "10sec": "10 Seconds (Huge tracks)",
                 "beepClassic": "Classic Beep (600 Hz)", "toneLow": "Low Tone (400 Hz)", "beepHigh": "High Beep (900 Hz)", "toneShort": "Short Whistle (1200 Hz)",
                 
-                // Voces y Dinámicos
                 voiceCalibrated: "Sensors calibrated.",
                 voiceFalseStart: "False Start!",
                 voiceFinished: "Race finished.",
@@ -962,12 +988,10 @@
                 yellowFlag: "DRAPEAU JAUNE",
                 racePaused: "COURSE PAUSÉE",
                 
-                 // Dropdowns
                 "5laps": "5 Tours", "10laps": "10 Tours", "25laps": "25 Tours", "50laps": "50 Tours", "infinite": "Infini",
                 "1sec": "1 Seconde (Pistes courtes)", "3sec": "3 Secondes (Standard)", "5sec": "5 Secondes (Pistes longues)", "10sec": "10 Secondes (Pistes énormes)",
                 "beepClassic": "Bip Classique (600 Hz)", "toneLow": "Ton Grave (400 Hz)", "beepHigh": "Bip Aigu (900 Hz)", "toneShort": "Sifflet Court (1200 Hz)",
                 
-                // Voces y Dinámicos
                 voiceCalibrated: "Capteurs calibrés.",
                 voiceFalseStart: "Faux départ !",
                 voiceFinished: "Course terminée.",
@@ -994,11 +1018,10 @@
         const handleTL = document.getElementById('handle-tl');
         const handleBR = document.getElementById('handle-br');
         const cameraOnBtn = document.getElementById('camera-on-btn');
+        const torchBtn = document.getElementById('torch-btn'); 
         const cameraOffBtn = document.getElementById('camera-off-btn');
         const calibrateBtn = document.getElementById('calibrate-btn');
         const videoStatus = document.getElementById('video-status');
-        const cameraErrorAlert = document.getElementById('camera-error-alert');
-        const cameraErrorText = document.getElementById('camera-error-text');
         const startRaceBtn = document.getElementById('start-race-btn');
         const resetRaceBtn = document.getElementById('reset-race-btn');
         const centralConfigBtn = document.getElementById('central-config-btn');
@@ -1027,6 +1050,10 @@
         const iconPause = document.getElementById('icon-pause');
         const iconPlay = document.getElementById('icon-play');
         const pauseText = document.getElementById('pause-text');
+        const mainPauseBtn = document.getElementById('main-pause-btn');
+        const mainIconPause = document.getElementById('main-icon-pause');
+        const mainIconPlay = document.getElementById('main-icon-play');
+        const mainPauseText = document.getElementById('main-pause-text');
         const yellowFlagOverlay = document.getElementById('yellow-flag-overlay');
         const modeTargetDisplay = document.getElementById('mode-target-display');
         
@@ -1062,6 +1089,8 @@
 
         // --- ESTADO Y VARIABLES GLOBALES (IA) ---
         let cameraStream = null;
+        let videoTrack = null;  
+        let isTorchOn = false;   
         let isProcessing = false;
         let raceIntervalId = null;
         let lapIntervalId = null;
@@ -1069,8 +1098,6 @@
         let isCountdown = false; 
         let raceAborted = false;
         let isCalibrating = false;
-        
-        // --- PAUSE STATE ---
         let isPaused = false;
         let pauseStartTime = 0;
 
@@ -1078,19 +1105,17 @@
         let baseBrightness = null;
         let sensitivity = 20; 
         let blindTimeMs = 3000;
-        let isLineBlocked = false; // Flag para debounce
-        let needsClearance = false; // NUEVO: Bandera de "espera a limpiar sensor"
+        let isLineBlocked = false; 
         let lastRecordTime = 0;
         let lapStartTimestamp = 0;
-        let hasCrossedStart = false; // NUEVO: Bandera de cruce inicial
-        let stuckFrameCount = 0; // NUEVO: Contador de seguridad anti-bloqueo
+        let hasCrossedStart = false; 
         
         // Carrera
         let raceStartTime = 0;
         let currentLap = 0;
         let totalLaps = 10; 
-        let raceMode = 'laps'; // 'laps' or 'time'
-        let raceTimeLimit = 0; // In ms
+        let raceMode = 'laps'; 
+        let raceTimeLimit = 0; 
         let finalRaceTimeMs = 0; 
         let lapHistory = [];
         let bestLapTime = Infinity;
@@ -1208,14 +1233,9 @@
 
         function processVideo() {
             if (!isProcessing) return;
-            
-            if (isPaused) {
-                requestAnimationFrame(processVideo); // Mantener loop pero no procesar
-                return;
-            }
+            if (isPaused) { requestAnimationFrame(processVideo); return; }
 
             const currentBri = getROIBrightness();
-            
             detectionValIndicator.textContent = `Brillo: ${currentBri.toFixed(0)}`;
             
             if (baseBrightness === null) baseBrightness = currentBri;
@@ -1223,75 +1243,56 @@
             const diff = Math.abs(currentBri - baseBrightness);
             const crossed = diff > sensitivity;
 
-            // Visual Logic: Detección Inmediata
             if (crossed) {
                 movableRectangle.classList.add('roi-detected');
             } else {
                 movableRectangle.classList.remove('roi-detected');
-                // Adaptación continua si no está bloqueado
                 if (!isCalibrating && !isLineBlocked) { 
                     baseBrightness = (baseBrightness * 0.95) + (currentBri * 0.05);
                 }
             }
 
             if (!isCalibrating) {
-                // TEST MODE
                 if (!isRaceActive && !isCountdown) {
                     testMsg.style.display = crossed ? 'block' : 'none';
                     testMsg.textContent = translations[currentLang].testOk;
                 }
                 
-                // SALIDA NULA
                 if (isCountdown && crossed && !raceAborted) {
                     handleFalseStart();
                 }
 
-                // CARRERA ACTIVA
                 if (isRaceActive) {
                     const now = Date.now();
-                    
                     if (isLineBlocked) {
-                        // --- ESTADO BLOQUEADO (GRIS) ---
-                        // Estamos dentro del tiempo de seguridad
                         if (now - lastRecordTime < blindTimeMs) {
                             movableRectangle.classList.add('roi-locked');
                             movableRectangle.classList.remove('roi-detected');
                             testMsg.style.display = "block";
                             testMsg.textContent = translations[currentLang].testWait;
                         } else {
-                            // --- ESTADO LIMPIEZA ---
-                            // El tiempo ha pasado, pero... ¿está limpio el sensor?
                             if (crossed) {
-                                // NO está limpio. MANTENER BLOQUEO para evitar rebote falso.
-                                // Forzar adaptación rápida para "acostumbrarse" a la nueva luz/obstáculo.
                                 movableRectangle.classList.add('roi-locked');
                                 baseBrightness = (baseBrightness * 0.9) + (currentBri * 0.1);
                             } else {
-                                // SÍ está limpio. LIBERAR.
                                 movableRectangle.classList.remove('roi-locked');
                                 isLineBlocked = false; 
                                 testMsg.style.display = "none";
                             }
                         }
                     } else {
-                        // --- ESTADO VIGILANCIA ---
-                        // Sensor libre, esperando coche.
                         if (crossed) {
-                            // ¡Coche detectado!
                             if (!hasCrossedStart) {
-                                // Primera vez (Salida real)
                                 hasCrossedStart = true;
                                 lapStartTimestamp = now; 
                                 lastRecordTime = now;    
                                 isLineBlocked = true;
-                                
                                 testMsg.textContent = translations[currentLang].testGo;
                                 testMsg.style.display = "block";
                                 setTimeout(() => { if(isRaceActive) testMsg.style.display = 'none'; }, 1000);
                                 polySynth.triggerAttackRelease(["C5", "G5"], "0.1");
                             } else {
-                                // Vuelta normal
-                                recordLap(); // Esto pondrá isLineBlocked = true
+                                recordLap();
                             }
                         }
                     }
@@ -1300,16 +1301,13 @@
             requestAnimationFrame(processVideo);
         }
 
-        // --- CALIBRACIÓN AUTO ---
         async function runAutoCalibration() {
             if (!isProcessing) return;
             isCalibrating = true;
             calibOverlay.classList.add('active');
             calibrateBtn.disabled = true;
 
-            let samples = 0;
-            let sum = 0;
-            let min = 255, max = 0;
+            let samples = 0, sum = 0, min = 255, max = 0;
             const frames = 60; 
 
             function sample() {
@@ -1319,11 +1317,8 @@
                 if(b > max) max = b;
                 samples++;
                 
-                if (samples < frames) {
-                    requestAnimationFrame(sample);
-                } else {
-                    finishCalib(sum/frames, min, max);
-                }
+                if (samples < frames) requestAnimationFrame(sample);
+                else finishCalib(sum/frames, min, max);
             }
             sample();
         }
@@ -1341,7 +1336,6 @@
             isCalibrating = false;
             calibOverlay.classList.remove('active');
             calibrateBtn.disabled = false;
-            
             speak(translations[currentLang].voiceCalibrated);
         }
 
@@ -1353,16 +1347,11 @@
             falseStartAlert.classList.add('show');
             speak(translations[currentLang].voiceFalseStart);
             resetRaceBtn.disabled = false;
-
-            // Auto-hide after 2 seconds
-            setTimeout(() => {
-                falseStartAlert.classList.remove('show');
-            }, 2000);
+            setTimeout(() => { falseStartAlert.classList.remove('show'); }, 2000);
         }
 
         function recordLap() {
             const now = Date.now();
-            
             if (now - lastRecordTime < blindTimeMs) return; 
             
             isLineBlocked = true; 
@@ -1395,12 +1384,8 @@
             document.getElementById('lap-time').textContent = formatTime(completedLapTime, false);
             updateLapDisplay();
             
-            // Check win condition for LAPS mode
-            if (raceMode === 'laps' && totalLaps !== Infinity && currentLap >= totalLaps) {
-                stopRace(true);
-            } else {
-                lapStartTimestamp = now; 
-            }
+            if (raceMode === 'laps' && totalLaps !== Infinity && currentLap >= totalLaps) stopRace(true);
+            else lapStartTimestamp = now; 
         }
         
         function calculateStats(time, speed) {
@@ -1426,21 +1411,12 @@
 
         function startTimers(isResume = false) {
             if (raceIntervalId) clearInterval(raceIntervalId);
-            
-            // Solo reseteamos los tiempos si NO es una reanudación
-            if (!isResume) {
-                raceStartTime = Date.now();
-                lapStartTimestamp = raceStartTime;
-            }
+            if (!isResume) { raceStartTime = Date.now(); lapStartTimestamp = raceStartTime; }
             
             raceIntervalId = setInterval(() => {
                 finalRaceTimeMs = Date.now() - raceStartTime;
                 document.getElementById('race-time').textContent = formatTime(finalRaceTimeMs, true);
-                
-                // CHECK TIME LIMIT FOR TIME ATTACK MODE
-                if (raceMode === 'time' && finalRaceTimeMs >= raceTimeLimit) {
-                    stopRace(true);
-                }
+                if (raceMode === 'time' && finalRaceTimeMs >= raceTimeLimit) stopRace(true);
             }, 50);
             
             if (lapIntervalId) clearInterval(lapIntervalId);
@@ -1451,16 +1427,10 @@
         }
 
         async function startTrafficLight() {
-            // FIX PARA iOS (iPhone): Desbloquear explícitamente el motor de audio con la acción del clic del usuario
-            if (Tone.context.state !== 'running') {
-                await Tone.start();
-            }
-
+            if (Tone.context.state !== 'running') await Tone.start();
             if (voiceToggle.checked && window.speechSynthesis.paused) window.speechSynthesis.resume();
             
             configPanel.classList.remove('open');
-            
-            // LECTURA DE CONFIGURACION
             raceMode = raceModeSelect.value;
             
             if (raceMode === 'laps') {
@@ -1468,14 +1438,12 @@
                 totalLaps = val === 'Infinity' ? Infinity : parseInt(val);
                 raceTimeLimit = 0;
             } else {
-                // TIME MODE
-                totalLaps = Infinity; // Infinite laps until time stops
+                totalLaps = Infinity; 
                 const mins = parseInt(timeLimitSelect.value);
                 raceTimeLimit = mins * 60 * 1000;
             }
             
             updateLapDisplay(); 
-
             startRaceBtn.disabled = true; resetRaceBtn.disabled = true;
             falseStartAlert.classList.remove('show');
             blindTimeMs = parseInt(safetyTimeSelect.value); 
@@ -1484,8 +1452,7 @@
             lights.forEach(l => l.className = "light");
 
             isCountdown = true; raceAborted = false;
-            hasCrossedStart = false; 
-            isLineBlocked = false; 
+            hasCrossedStart = false; isLineBlocked = false; 
             
             for (let i = 0; i < 5; i++) {
                 if(raceAborted) return;
@@ -1503,43 +1470,29 @@
             lights.forEach(l => { l.classList.remove('red'); l.classList.add('green'); });
             polySynth.triggerAttackRelease(["C5", "E5", "G5"], "0.5");
             
-            isRaceActive = true;
-            isPaused = false;
-            pauseBtn.disabled = false; // Habilitar pausa
+            isRaceActive = true; isPaused = false;
+            pauseBtn.disabled = false; 
             updatePauseUI();
             
-            startTimers(false); // False porque es una carrera nueva
+            startTimers(false); 
             resetRaceBtn.disabled = false;
-            
             lastRecordTime = Date.now() - blindTimeMs; 
         }
-        
-        // --- PAUSE LOGIC ---
+
         function togglePause() {
             if (!isRaceActive) return;
-
             if (!isPaused) {
-                // START PAUSE
                 isPaused = true;
                 pauseStartTime = Date.now();
-                clearInterval(raceIntervalId);
-                clearInterval(lapIntervalId);
-                
-                // Show Yellow Flag
+                clearInterval(raceIntervalId); clearInterval(lapIntervalId);
                 yellowFlagOverlay.classList.add('active');
             } else {
-                // RESUME
                 isPaused = false;
                 const pauseDuration = Date.now() - pauseStartTime;
-                
-                // Adjust start times so calculations remain valid
                 raceStartTime += pauseDuration;
                 lapStartTimestamp += pauseDuration;
                 lastRecordTime += pauseDuration; 
-                
-                startTimers(true); // True indica que es RESUME, no resetear tiempos
-                
-                // Hide Yellow Flag
+                startTimers(true); 
                 yellowFlagOverlay.classList.remove('active');
             }
             updatePauseUI();
@@ -1549,24 +1502,53 @@
              const t = translations[currentLang];
              if (isPaused) {
                  pauseText.textContent = t.resume;
-                 pauseBtn.classList.remove('bg-gray-200', 'text-gray-700', 'border-gray-300');
-                 pauseBtn.classList.add('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
-                 iconPause.classList.add('hidden');
-                 iconPlay.classList.remove('hidden');
+                 pauseBtn.classList.replace('bg-gray-200', 'bg-yellow-100');
+                 pauseBtn.classList.replace('text-gray-700', 'text-yellow-800');
+                 pauseBtn.classList.replace('border-gray-300', 'border-yellow-300');
+                 iconPause.classList.add('hidden'); iconPlay.classList.remove('hidden');
+                 
+                 if(mainPauseBtn) {
+                     mainPauseText.textContent = t.resume;
+                     mainPauseBtn.classList.add('is-paused');
+                     mainIconPause.classList.add('hidden'); mainIconPlay.classList.remove('hidden');
+                 }
              } else {
                  pauseText.textContent = t.pause;
-                 pauseBtn.classList.add('bg-gray-200', 'text-gray-700', 'border-gray-300');
-                 pauseBtn.classList.remove('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
-                 iconPause.classList.remove('hidden');
-                 iconPlay.classList.add('hidden');
+                 pauseBtn.classList.replace('bg-yellow-100', 'bg-gray-200');
+                 pauseBtn.classList.replace('text-yellow-800', 'text-gray-700');
+                 pauseBtn.classList.replace('border-yellow-300', 'border-gray-300');
+                 iconPause.classList.remove('hidden'); iconPlay.classList.add('hidden');
+                 
+                 if(mainPauseBtn) {
+                     mainPauseText.textContent = t.pause;
+                     mainPauseBtn.classList.remove('is-paused');
+                     mainIconPause.classList.remove('hidden'); mainIconPlay.classList.add('hidden');
+                 }
              }
         }
 
         function stopRace(finished = false) {
             isRaceActive = false; isCountdown = false; hasCrossedStart = false; isPaused = false;
             pauseBtn.disabled = true; // Deshabilitar pausa
+            if(mainPauseBtn) mainPauseBtn.disabled = true;
             yellowFlagOverlay.classList.remove('active'); // Asegurar quitar bandera amarilla
             updatePauseUI();
+            
+            // SALIR DE MODO INMERSIVO
+            document.body.classList.remove('race-mode-active');
+            
+            // SALIR DE PANTALLA COMPLETA
+            if (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+                try {
+                    let req;
+                    if (document.exitFullscreen) req = document.exitFullscreen();
+                    else if (document.mozCancelFullScreen) req = document.mozCancelFullScreen();
+                    else if (document.webkitExitFullscreen) req = document.webkitExitFullscreen();
+                    else if (document.msExitFullscreen) req = document.msExitFullscreen();
+                    
+                    if (req && req.catch) req.catch(e => console.warn("Exit fullscreen denied:", e));
+                } catch(e) {}
+            }
 
             if (raceIntervalId) clearInterval(raceIntervalId);
             if (lapIntervalId) clearInterval(lapIntervalId);
@@ -1587,27 +1569,25 @@
                     row.innerHTML = `<td class="py-2 px-4">${l.lap}</td><td class="py-2 px-4">${(l.time/1000).toFixed(3)}</td><td class="py-2 px-4">${l.speed.toFixed(1)}</td>`;
                     tbody.appendChild(row);
                 });
+                
                 resultsModal.classList.remove('hidden');
-                setTimeout(()=>resultsModal.classList.add('open'),10);
+                setTimeout(() => {
+                    resultsModal.classList.add('open');
+                    drawModalLapGraph(); // DIBUJAR GRAFICA EN EL MODAL AL ABRIRSE
+                }, 10);
             } else {
-                // LECTURA FORZADA DEL DOM AL REINICIAR
-                // Reset simple vars
                 currentLap = 0; lapHistory = []; bestLapTime = Infinity; totalLapTime = 0;
                 currentAverageTime = 0; maxSpeed = 0; avgSpeed = 0; lastCompletedLapTime = 0;
                 document.getElementById('race-time').textContent = "00:00.000";
                 document.getElementById('lap-time').textContent = "00.000";
                 
-                // Re-read settings just in case
                 raceMode = raceModeSelect.value;
                 if (raceMode === 'laps') {
                     const val = lapLimitSelect.value;
                     totalLaps = val === 'Infinity' ? Infinity : parseInt(val);
-                } else {
-                    totalLaps = Infinity;
-                }
+                } else totalLaps = Infinity;
                 
-                updateLapDisplay();
-                updateTelemetryDisplay();
+                updateLapDisplay(); updateTelemetryDisplay();
                 const lights = [1,2,3,4,5].map(i => document.getElementById(`light-${i}`));
                 lights.forEach(l => l.className = "light");
             }
@@ -1618,11 +1598,9 @@
         function updateLapDisplay() { 
             const t = translations[currentLang];
             const maxLapsText = totalLaps === Infinity ? '∞' : totalLaps;
-            
             if (raceMode === 'time') {
                 document.getElementById('lap-count').textContent = currentLap;
-                const mins = timeLimitSelect.value;
-                modeTargetDisplay.textContent = `${t.limitLabel}: ${mins} min`;
+                modeTargetDisplay.textContent = `${t.limitLabel}: ${timeLimitSelect.value} min`;
                 modeTargetDisplay.classList.remove('hidden');
             } else {
                 document.getElementById('lap-count').textContent = `${currentLap} / ${maxLapsText}`; 
@@ -1630,10 +1608,7 @@
             }
         }
         
-        function calculateSpeed(ms) { 
-            const dist = parseFloat(trackLengthInput.value); 
-            return ms > 0 ? (dist / (ms/1000)) * 3.6 : 0; 
-        }
+        function calculateSpeed(ms) { return ms > 0 ? (parseFloat(trackLengthInput.value) / (ms/1000)) * 3.6 : 0; }
         function playSound(freq, dur) { if(Tone.context.state !== 'running') Tone.context.resume(); synth.triggerAttackRelease(freq, dur); }
         function playFinalLapSound() { if(Tone.context.state !== 'running') Tone.context.resume(); polySynth.triggerAttackRelease(["G5", "C6"], "0.2"); }
         function formatTime(ms, full) {
@@ -1642,36 +1617,15 @@
             return full ? `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(mil).padStart(3,'0')}` : `${String(sec).padStart(2,'0')}.${String(mil).padStart(3,'0')}`;
         }
         
-        // HELPER PARA HABLAR MEJORADO
         function speak(text) {
             if(voiceToggle.checked) {
-                // Cancelar cualquier audio anterior
                 window.speechSynthesis.cancel();
-                
                 const u = new SpeechSynthesisUtterance(text);
-                
-                // Definir el código de idioma BCP 47
-                let langCode = 'es-ES';
-                if (currentLang === 'en') langCode = 'en-US';
-                else if (currentLang === 'fr') langCode = 'fr-FR';
-                
+                let langCode = currentLang === 'en' ? 'en-US' : (currentLang === 'fr' ? 'fr-FR' : 'es-ES');
                 u.lang = langCode;
-                
-                // INTENTO DE FORZAR LA VOZ CORRECTA
                 const voices = window.speechSynthesis.getVoices();
-                // Buscar una voz que coincida exactamente con el idioma
-                let voice = voices.find(v => v.lang === langCode);
-                
-                // Si no hay exacta, buscar una que empiece por el idioma (ej: es-MX para es-ES)
-                if (!voice) {
-                    voice = voices.find(v => v.lang.startsWith(langCode.substring(0, 2)));
-                }
-                
-                // Si encontramos voz, la asignamos. Si no, confiamos en el u.lang
-                if (voice) {
-                    u.voice = voice;
-                }
-
+                let voice = voices.find(v => v.lang === langCode) || voices.find(v => v.lang.startsWith(langCode.substring(0, 2)));
+                if (voice) u.voice = voice;
                 window.speechSynthesis.speak(u);
             }
         }
@@ -1680,18 +1634,18 @@
         function announceLap(n, t, best, xtra) {
             if(!voiceToggle.checked || n<=0) return;
             const sec = Math.floor(t/1000); const dec = (t%1000).toString().padStart(3,'0');
-            // Construccion dinamica "5 punto 320"
             let txt = `${sec} ${translations[currentLang].voicePoint} ${dec}`;
             if(best && n>1) txt = translations[currentLang].voiceFastest + " " + txt;
             if(xtra) txt += ". " + xtra;
             speak(txt);
         }
 
-        // --- DRAW GRAPH ---
+        // --- DRAW GRAPH PRINCIPAL ---
         function drawLapGraph() {
             const w = graphCanvas.parentElement.offsetWidth - 32; graphCanvas.width = w; graphCanvas.height = 200;
             if (!lapHistory.length) { graphCtx.clearRect(0,0,w,200); graphStatus.textContent=translations[currentLang].noData; return; }
             graphStatus.textContent="";
+            
             const times = lapHistory.map(l=>l.time);
             const max = Math.max(...times); const min = Math.min(...times);
             const range = max-min || 1; 
@@ -1700,14 +1654,41 @@
             
             graphCtx.clearRect(0,0,w,200);
             times.forEach((t, i) => {
-                const h = gh * 0.7; // Default height
-                const normalizedH = range===0 ? h : (gh * (1 - (t-min)/range)*0.8 + gh*0.2);
+                const normalizedH = range===0 ? (gh*0.7) : (gh * (1 - (t-min)/range)*0.8 + gh*0.2);
                 const x = pad + i * (barW + 5); const y = 200 - pad - normalizedH;
                 
                 graphCtx.fillStyle = (t===bestLapTime) ? '#059669' : '#6b7280';
                 graphCtx.fillRect(x, y, barW, normalizedH);
                 graphCtx.fillStyle = '#374151'; graphCtx.font='10px Arial'; graphCtx.textAlign='center';
                 graphCtx.fillText(i+1, x+barW/2, 195);
+            });
+        }
+        
+        // --- DRAW GRAPH EN MODAL FINAL ---
+        function drawModalLapGraph() {
+            const modalCanvas = document.getElementById('modal-lap-graph-canvas');
+            if (!modalCanvas) return;
+            const ctx = modalCanvas.getContext('2d');
+            const w = modalCanvas.parentElement.offsetWidth ? modalCanvas.parentElement.offsetWidth - 24 : 300; 
+            modalCanvas.width = w; modalCanvas.height = 128; // Más pequeñito para el modal
+            
+            if (!lapHistory.length) { ctx.clearRect(0,0,w,128); return; }
+            
+            const times = lapHistory.map(l=>l.time);
+            const max = Math.max(...times); const min = Math.min(...times);
+            const range = max-min || 1; 
+            const pad = 15; const gw = w-pad*2; const gh = 128-pad*2;
+            const barW = (gw / times.length) - 5;
+            
+            ctx.clearRect(0,0,w,128);
+            times.forEach((t, i) => {
+                const normalizedH = range===0 ? (gh*0.7) : (gh * (1 - (t-min)/range)*0.8 + gh*0.2);
+                const x = pad + i * (barW + 5); const y = 128 - pad - normalizedH;
+                
+                ctx.fillStyle = (t===bestLapTime) ? '#059669' : '#6b7280';
+                ctx.fillRect(x, y, barW, normalizedH);
+                ctx.fillStyle = '#374151'; ctx.font='10px Arial'; ctx.textAlign='center';
+                ctx.fillText(i+1, x+barW/2, 125);
             });
         }
         
@@ -1743,41 +1724,6 @@
             }
         }
 
-        // --- CAMBIO DE IDIOMA ---
-        function updateTexts() {
-            const t = translations[currentLang];
-            // Actualizar elementos con data-i18n
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (t[key]) {
-                    if (el.tagName === 'INPUT' && el.type !== 'range') {
-                        // placeholder si fuera necesario
-                    } else if (el.tagName === 'OPTION') {
-                        el.textContent = t[key];
-                    } else {
-                        el.textContent = t[key];
-                    }
-                }
-            });
-            // Actualizar status manuales
-            videoStatus.textContent = t.camLoading;
-            graphStatus.textContent = lapHistory.length ? "" : t.noData;
-            // Update Pause Button Text if needed (not captured by data-i18n during dynamic switch)
-            if (isPaused) {
-                pauseText.textContent = t.resume;
-            } else {
-                pauseText.textContent = t.pause;
-            }
-            updateLapDisplay();
-        }
-
-        langSelect.addEventListener('change', (e) => {
-            currentLang = e.target.value;
-            updateTexts();
-            // Guardar preferencia
-            localStorage.setItem('krono_lang', currentLang);
-        });
-        
         // --- CAMBIO DE MODO ---
         raceModeSelect.addEventListener('change', (e) => {
             const mode = e.target.value;
@@ -1797,7 +1743,27 @@
 
 
         // --- EVENTOS ---
-        startRaceBtn.addEventListener('click', startTrafficLight);
+        startRaceBtn.addEventListener('click', async () => {
+            // MODO INMERSIVO
+            document.body.classList.add('race-mode-active');
+            
+            // PANTALLA COMPLETA NATIVA
+            const docEl = document.documentElement;
+            if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                try {
+                    let req;
+                    if (docEl.requestFullscreen) req = docEl.requestFullscreen();
+                    else if (docEl.mozRequestFullScreen) req = docEl.mozRequestFullScreen();
+                    else if (docEl.webkitRequestFullscreen) req = docEl.webkitRequestFullscreen();
+                    else if (docEl.msRequestFullscreen) req = docEl.msRequestFullscreen();
+                    
+                    if (req && req.catch) req.catch(e => console.warn("Fullscreen request denied:", e));
+                } catch(e) { console.warn("Fullscreen request failed", e); }
+            }
+            
+            await startTrafficLight();
+        });
+        
         resetRaceBtn.addEventListener('click', () => stopRace(false));
         centralConfigBtn.addEventListener('click', () => configPanel.classList.toggle('open'));
         modalRestartBtn.addEventListener('click', () => { resultsModal.classList.remove('open'); setTimeout(()=>resultsModal.classList.add('hidden'),300); stopRace(false); });
@@ -1806,38 +1772,46 @@
             try {
                 const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
                 cameraStream = s; videoElement.srcObject = s;
-                videoElement.play(); movableRectangle.style.display='block';
+                videoElement.play(); 
+                
+                videoTrack = s.getVideoTracks()[0];
+                const capabilities = (typeof videoTrack.getCapabilities === 'function') ? videoTrack.getCapabilities() : {};
+                if (capabilities && capabilities.torch) torchBtn.disabled = false; 
+                else torchBtn.disabled = true;
+
+                movableRectangle.style.display='block';
                 isProcessing=true; processVideo(); calibrateBtn.disabled=false;
                 videoStatus.textContent=translations[currentLang].camActive; videoStatus.className="text-center text-sm mt-2 text-green-600 font-bold";
                 cameraOnBtn.disabled=true; cameraOffBtn.disabled=false;
             } catch(e) { videoStatus.textContent=translations[currentLang].camError; }
         });
+
+        torchBtn.addEventListener('click', async () => {
+            if (!videoTrack) return;
+            try {
+                isTorchOn = !isTorchOn;
+                await videoTrack.applyConstraints({ advanced: [{ torch: isTorchOn }] });
+                if (isTorchOn) {
+                    torchBtn.classList.replace('from-yellow-400', 'from-yellow-200');
+                    torchBtn.classList.replace('to-yellow-600', 'to-yellow-400');
+                    torchBtn.classList.add('animate-pulse');
+                } else {
+                    torchBtn.classList.replace('from-yellow-200', 'from-yellow-400');
+                    torchBtn.classList.replace('to-yellow-400', 'to-yellow-600');
+                    torchBtn.classList.remove('animate-pulse');
+                }
+            } catch (err) { isTorchOn = false; }
+        });
+
         cameraOffBtn.addEventListener('click', () => {
             if(cameraStream) cameraStream.getTracks().forEach(t=>t.stop());
             cameraStream=null; isProcessing=false; videoElement.srcObject=null; movableRectangle.style.display='none';
             cameraOnBtn.disabled=false; cameraOffBtn.disabled=true; calibrateBtn.disabled=true;
         });
+        
         calibrateBtn.addEventListener('click', runAutoCalibration);
         pauseBtn.addEventListener('click', togglePause);
-
-        thresholdSlider.addEventListener('input', () => { sensitivity = parseInt(thresholdSlider.value); currentThresholdDisplay.textContent = sensitivity; });
-        thresholdMinusBtn.addEventListener('click', () => { if(sensitivity>5) sensitivity--; thresholdSlider.value=sensitivity; currentThresholdDisplay.textContent=sensitivity; });
-        thresholdPlusBtn.addEventListener('click', () => { if(sensitivity<100) sensitivity++; thresholdSlider.value=sensitivity; currentThresholdDisplay.textContent=sensitivity; });
-        
-        lapLimitSelect.addEventListener('change', () => {
-            if (raceModeSelect.value === 'laps') {
-                totalLaps = lapLimitSelect.value === 'Infinity' ? Infinity : parseInt(lapLimitSelect.value);
-                updateLapDisplay();
-            }
-        });
-
-        historyBtn.addEventListener('click', () => { loadHistory(); historyModal.classList.remove('hidden'); setTimeout(()=>historyModal.classList.add('open'),10); });
-        closeHistoryBtn.addEventListener('click', () => { historyModal.classList.remove('open'); setTimeout(()=>historyModal.classList.add('hidden'),300); });
-        openConfirmBtn.addEventListener('click', () => { confirmModal.classList.remove('hidden'); setTimeout(()=>confirmModal.classList.add('open'),10); });
-        cancelClearBtn.addEventListener('click', () => { confirmModal.classList.remove('open'); setTimeout(()=>confirmModal.classList.add('hidden'),300); });
-        confirmClearBtn.addEventListener('click', () => { localStorage.removeItem('scx_history'); loadHistory(); confirmModal.classList.remove('open'); setTimeout(()=>confirmModal.classList.add('hidden'),300); });
-        exportExcelBtn.addEventListener('click', exportToExcel);
-        
+        if(mainPauseBtn) mainPauseBtn.addEventListener('click', togglePause);
         // --- LOGICA PANTALLA COMPLETA ---
         function toggleFullScreen() {
             const doc = window.document;
@@ -1848,27 +1822,28 @@
 
             if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
                 if (requestFullScreen) {
-                    requestFullScreen.call(docEl);
+                    try {
+                        const req = requestFullScreen.call(docEl);
+                        if (req && req.catch) req.catch(e => console.warn("Fullscreen request denied:", e));
+                    } catch(e) { console.warn("Fullscreen request failed", e); }
                 } else {
                     // Fallback simple para móviles que no soportan la API
                     alert("Tu navegador no soporta el modo pantalla completa. Usa 'Añadir a pantalla de inicio'.");
                 }
             } else {
                 if (cancelFullScreen) {
-                    cancelFullScreen.call(doc);
+                    try {
+                        const req = cancelFullScreen.call(doc);
+                        if (req && req.catch) req.catch(e => console.warn("Exit fullscreen denied:", e));
+                    } catch(e) { console.warn("Exit fullscreen failed", e); }
                 }
             }
         }
 
         function updateFsIcons() {
             const isFs = document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
-            if (isFs) {
-                fsIconEnter.classList.add('hidden');
-                fsIconExit.classList.remove('hidden');
-            } else {
-                fsIconEnter.classList.remove('hidden');
-                fsIconExit.classList.add('hidden');
-            }
+            if (isFs) { fsIconEnter.classList.add('hidden'); fsIconExit.classList.remove('hidden'); } 
+            else { fsIconEnter.classList.remove('hidden'); fsIconExit.classList.add('hidden'); }
         }
         
         fullscreenBtn.addEventListener('click', toggleFullScreen);
@@ -1877,33 +1852,21 @@
         document.addEventListener('mozfullscreenchange', updateFsIcons);
         document.addEventListener('MSFullscreenChange', updateFsIcons);
 
-        // Pre-cargar voces
-        if (window.speechSynthesis.onvoiceschanged !== undefined) {
-            window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-        }
+        if (window.speechSynthesis.onvoiceschanged !== undefined) window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 
-        // Init
         window.onload = () => {
-            // Forzar carga de voces al inicio
             window.speechSynthesis.getVoices();
-
             if (!movableRectangle.style.left) movableRectangle.style.left = '25%';
             if (!movableRectangle.style.top) movableRectangle.style.top = '25%';
             if (!movableRectangle.style.width) movableRectangle.style.width = '50%';
             if (!movableRectangle.style.height) movableRectangle.style.height = '50%';
             
-            // Cargar Idioma
             const savedLang = localStorage.getItem('krono_lang');
-            if (savedLang) {
-                currentLang = savedLang;
-                langSelect.value = savedLang;
-                updateTexts();
-            }
+            if (savedLang) { currentLang = savedLang; langSelect.value = savedLang; updateTexts(); }
 
-            // FIX: ASEGURAR SINCRONIZACION AL CARGAR LA PAGINA
             totalLaps = lapLimitSelect.value === 'Infinity' ? Infinity : parseInt(lapLimitSelect.value);
-
             sensitivity = 20; thresholdSlider.value=20; currentThresholdDisplay.textContent=20;
+            
             updateLapDisplay(); stopRace(false);
             const snd = document.getElementById('soundSelect');
             snd.addEventListener('change', e => { selectedSoundIndex=parseInt(e.target.value); playSound(soundOptions[selectedSoundIndex].freq, 0.1); });
