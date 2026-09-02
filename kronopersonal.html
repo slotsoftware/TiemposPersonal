@@ -653,7 +653,7 @@
             </div>
         </div>
 
-        <div id="graph-panel" class="silver-panel w-full p-4 mb-4">
+        <div id="graph-panel" class="silver-panel w-full p-4 mb-4 hidden">
             <h2 class="text-base neon-silver-title mb-4 border-b border-gray-300 pb-2 uppercase tracking-widest text-left" data-i18n="timeGraph">Gráfica de Tiempos</h2>
             <canvas id="lap-graph-canvas"></canvas>
             <p id="graph-status" class="text-center text-sm text-gray-500 mt-2 italic" data-i18n="noData">Sin datos</p>
@@ -1775,9 +1775,22 @@
                 videoElement.play(); 
                 
                 videoTrack = s.getVideoTracks()[0];
-                const capabilities = (typeof videoTrack.getCapabilities === 'function') ? videoTrack.getCapabilities() : {};
-                if (capabilities && capabilities.torch) torchBtn.disabled = false; 
-                else torchBtn.disabled = true;
+                
+                // MEJORA: Damos 500ms al dispositivo para inicializar las capacidades físicas (Común en Android)
+                setTimeout(() => {
+                    try {
+                        const capabilities = (typeof videoTrack.getCapabilities === 'function') ? videoTrack.getCapabilities() : {};
+                        // Si existe la propiedad torch, lo activamos si es true.
+                        // Si el dispositivo NO expone la propiedad, lo habilitamos igualmente para que el usuario pueda intentar.
+                        if (capabilities && capabilities.torch !== undefined) {
+                            torchBtn.disabled = !capabilities.torch;
+                        } else {
+                            torchBtn.disabled = false;
+                        }
+                    } catch (e) {
+                        torchBtn.disabled = false; // Fallback: habilitar
+                    }
+                }, 500);
 
                 movableRectangle.style.display='block';
                 isProcessing=true; processVideo(); calibrateBtn.disabled=false;
@@ -1786,11 +1799,20 @@
             } catch(e) { videoStatus.textContent=translations[currentLang].camError; }
         });
 
+        // MEJORA: Botón Linterna con manejo de errores robusto
         torchBtn.addEventListener('click', async () => {
             if (!videoTrack) return;
             try {
                 isTorchOn = !isTorchOn;
-                await videoTrack.applyConstraints({ advanced: [{ torch: isTorchOn }] });
+                
+                // Intento 1: Formato estándar de API de captura de imagen
+                try {
+                    await videoTrack.applyConstraints({ advanced: [{ torch: isTorchOn }] });
+                } catch (err1) {
+                    // Intento 2: Fallback directo que soportan algunos navegadores
+                    await videoTrack.applyConstraints({ torch: isTorchOn });
+                }
+
                 if (isTorchOn) {
                     torchBtn.classList.replace('from-yellow-400', 'from-yellow-200');
                     torchBtn.classList.replace('to-yellow-600', 'to-yellow-400');
@@ -1800,7 +1822,13 @@
                     torchBtn.classList.replace('to-yellow-400', 'to-yellow-600');
                     torchBtn.classList.remove('animate-pulse');
                 }
-            } catch (err) { isTorchOn = false; }
+            } catch (err) { 
+                isTorchOn = false; 
+                torchBtn.classList.replace('from-yellow-200', 'from-yellow-400');
+                torchBtn.classList.replace('to-yellow-400', 'to-yellow-600');
+                torchBtn.classList.remove('animate-pulse');
+                alert("Tu navegador o dispositivo no permite usar la linterna desde esta web.\n\n(Nota: Si usas iPhone/Safari, Apple bloquea esta función por defecto).\n\nDetalle: " + err.message);
+            }
         });
 
         cameraOffBtn.addEventListener('click', () => {
