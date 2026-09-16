@@ -8,9 +8,25 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body { 
-            background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            background-color: #0f172a; /* Fallback color */
+            background-image: url('fondo.jpeg'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             font-family: sans-serif; 
             color: #f8fafc;
+        }
+
+        /* Overlay semi-transparente para mejorar la legibilidad sobre la imagen de fondo */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(15,23,42,0.85) 0%, rgba(30,41,59,0.7) 50%, rgba(51,65,85,0.85) 100%);
+            z-index: -1;
         }
 
         .silver-panel {
@@ -94,7 +110,10 @@
         }
     </style>
 </head>
-<body class="min-h-screen overflow-y-auto">
+<body class="min-h-screen overflow-y-auto relative">
+    
+    <!-- Capa oscura sobre la imagen de fondo para contraste -->
+    <div class="bg-overlay"></div>
 
     <!-- Modal de Sesión Duplicada -->
     <div id="session-alert">
@@ -371,6 +390,3 @@
     </script>
 </body>
 </html>
-
-
-
