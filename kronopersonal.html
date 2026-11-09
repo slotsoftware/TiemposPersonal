@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KRONO V.3.0 - Voice Fix</title>
+    <title>KRONO PERSONAL LITE</title>
     
     <!-- METADATOS PWA Y PERMISOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="KRONO V.2">
-    <meta name="application-name" content="KRONO V.2">
+    <meta name="apple-mobile-web-app-title" content="KRONO PERSONAL LITE">
+    <meta name="application-name" content="KRONO PERSONAL LITE">
     <meta http-equiv="Permissions-Policy" content="camera=(self)">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -52,102 +52,142 @@
     </script>
     
     <style>
-        /* --- ESTILOS PLATINUM / SILVER --- */
+        /* --- ESTILOS MACOS DARK MODE (SPACE BLACK / TITANIUM) --- */
         body {
-            font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at center, #b0b8c1 0%, #636e72 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            background: radial-gradient(circle at 20% 10%, #1c1c1e 0%, #121214 55%, #000000 100%);
+            background-attachment: fixed;
             margin: 0; padding: 0;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             min-height: 100vh;
-            color: #1f2937; 
+            color: #f5f5f7; 
             overscroll-behavior: none;
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
         }
         
         input, select { user-select: text; -webkit-user-select: text; }
         
-        /* Clases para Paneles Plateados Brillantes */
+        /* Ventanas / Paneles Oscuros Translúcidos estilo macOS Dark */
         .silver-panel {
-            background: linear-gradient(to bottom, #9ca3af 0%, #e5e7eb 40%, #ffffff 100%);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.25), inset 0 0 15px rgba(255,255,255,0.5);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            color: #111827; 
+            background: rgba(28, 28, 30, 0.78);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 14px 34px -5px rgba(0, 0, 0, 0.55), 
+                        0 2px 8px -1px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            color: #f5f5f7; 
         }
 
+        /* Inputs y Selects Nativos de macOS Dark */
         .silver-input {
-            background: #f3f4f6; border: 1px solid #9ca3af; color: #111827;
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1);
+            background: rgba(44, 44, 46, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: #f5f5f7;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-size: 0.875rem;
         }
         .silver-input:focus {
-            background: #ffffff; border-color: #6b7280; outline: none;
-            box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.5);
+            background: #3a3a3c;
+            border-color: #0a84ff;
+            outline: none;
+            box-shadow: 0 0 0 3.5px rgba(10, 132, 255, 0.3);
         }
 
-        .font-arial { font-family: Arial, sans-serif !important; }
+        /* Tipografía Monoespaciada Tabular de Apple para los Cronómetros */
+        .font-arial { 
+            font-family: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; 
+            font-variant-numeric: tabular-nums;
+        }
 
+        /* Títulos de Sección Limpios estilo Apple Dark */
         .neon-silver-title {
-            color: #4a5568;
-            text-shadow: 0 0 2px #fff, 0 0 5px #cbd5e0, 0 0 10px rgba(160, 174, 192, 0.5), 2px 2px 4px rgba(0,0,0,0.25);
-            text-align: left; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;
+            color: #f5f5f7;
+            text-shadow: none;
+            text-align: left;
+            font-weight: 700;
+            text-transform: none;
+            letter-spacing: -0.015em;
         }
         
-        .traffic-light-container.five-lights { display: flex; gap: 10px; }
-        .light {
-            width: 30px; height: 30px; border-radius: 50%;
-            background-color: #333; border: 2px solid #555; 
-            box-shadow: inset 0 0 5px #000;
-            transition: background-color 0.1s ease, box-shadow 0.1s ease;
+        /* Semáforo de Carrera con Estética Cápsula Oscura */
+        .traffic-light-container.five-lights { 
+            display: flex; 
+            gap: 10px; 
+            background: rgba(10, 10, 12, 0.9);
+            padding: 8px 14px;
+            border-radius: 9999px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .light.red { background-color: #ef4444; box-shadow: 0 0 15px #ef4444, inset 0 0 10px rgba(255,255,255,0.5); }
-        .light.green { background-color: #10b981; box-shadow: 0 0 15px #10b981, inset 0 0 10px rgba(255,255,255,0.5); }
+        .light {
+            width: 22px; height: 22px; border-radius: 50%;
+            background-color: #242426; border: 1.5px solid #3a3a3c; 
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.9);
+            transition: all 0.15s ease;
+        }
+        .light.red { 
+            background-color: #ff453a; 
+            border-color: #ff6961;
+            box-shadow: 0 0 14px #ff453a, inset 0 1px 2px rgba(255,255,255,0.6); 
+        }
+        .light.green { 
+            background-color: #30d158; 
+            border-color: #4cd964;
+            box-shadow: 0 0 14px #30d158, inset 0 1px 2px rgba(255,255,255,0.6); 
+        }
 
+        /* Contenedor de Vídeo Estilo QuickTime Player Dark */
         #video-container {
             position: relative; width: 100%; 
-            border: 4px solid #d1d5db; background-color: #000; 
-            border-radius: 0.5rem; overflow: hidden; 
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background-color: #000; 
+            border-radius: 12px; overflow: hidden; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.45);
         }
         
         #webcam-feed {
-            max-height: 320px; object-fit: cover; width: 100%;
+            max-height: 440px; min-height: 280px; object-fit: cover; width: 100%;
             display: block; transform: scaleX(1);
-            filter: contrast(1.1) grayscale(0.1); 
         }
 
-        /* --- ROI MINIMALISTA (HITBOX MEJORADO) --- */
+        /* --- ROI MINIMALISTA --- */
         #movable-rectangle {
             position: absolute; top: 25%; left: 25%; width: 50%; height: 50%;
             cursor: move; 
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            background-color: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 0 15px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.1);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            background-color: rgba(10, 132, 255, 0.12);
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.4), inset 0 0 12px rgba(255,255,255,0.15);
             transition: background-color 0.1s ease, border-color 0.2s ease, box-shadow 0.2s ease; 
             z-index: 10; box-sizing: border-box; touch-action: none; display: none; 
         }
         
         .roi-detected {
-            background-color: rgba(255, 255, 255, 0.4) !important;
-            border-color: #ffffff !important;
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.6) !important;
+            background-color: rgba(48, 209, 88, 0.35) !important;
+            border-color: #30d158 !important;
+            box-shadow: 0 0 25px rgba(48, 209, 88, 0.7) !important;
         }
         
         .roi-locked {
-            border-color: #6b7280 !important; 
-            background-color: rgba(0, 0, 0, 0.1) !important;
-            opacity: 0.5;
+            border-color: #636366 !important; 
+            background-color: rgba(0, 0, 0, 0.4) !important;
+            opacity: 0.6;
             box-shadow: none !important;
         }
-        .roi-locked #test-msg { display: block; content: "WAIT..."; color: #ccc; text-shadow: none; font-size: 12px;}
+        .roi-locked #test-msg { display: block; content: "WAIT..."; color: #e5e5ea; text-shadow: none; font-size: 12px;}
 
-        /* --- MANIJAS TÁCTILES MEJORADAS (AREA 44px, VISUAL 14px) --- */
+        /* --- MANIJAS TÁCTILES --- */
         .resize-handle {
             position: absolute; 
-            width: 44px; height: 44px; /* Area tactil */
+            width: 44px; height: 44px;
             background: transparent;
             z-index: 20; 
             touch-action: none; 
@@ -156,203 +196,241 @@
         
         .resize-handle::after {
             content: '';
-            width: 14px; height: 14px; /* Visual */
+            width: 12px; height: 12px;
             background-color: #ffffff; 
-            border: 1px solid #9ca3af; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.4); 
-            border-radius: 2px;
-            transition: transform 0.1s ease;
+            border: 2px solid #0a84ff; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+            border-radius: 50%;
+            transition: transform 0.15s ease;
         }
         
-        .resize-handle:active::after { transform: scale(1.3); background-color: #f3f4f6; }
+        .resize-handle:active::after { transform: scale(1.35); background-color: #0a84ff; border-color: #ffffff; }
 
         #handle-tl { top: -22px; left: -22px; cursor: nwse-resize; } 
         #handle-br { bottom: -22px; right: -22px; cursor: nwse-resize; } 
         
         #detection-val-indicator {
-            position: absolute; bottom: 4px; right: 4px; 
+            position: absolute; bottom: 6px; right: 6px; 
             top: auto; left: auto; 
-            background-color: rgba(0,0,0,0.6); color: #fff; 
-            font-size: 9px; font-weight: 600; font-family: 'Arial', sans-serif;
-            padding: 2px 6px; border-radius: 4px;
-            pointer-events: none; border: none; 
-            letter-spacing: 0.5px;
+            background-color: rgba(18, 18, 20, 0.82);
+            backdrop-filter: blur(8px);
+            color: #f5f5f7; 
+            font-size: 10px; font-weight: 600;
+            padding: 3px 8px; border-radius: 6px;
+            pointer-events: none; border: 1px solid rgba(255,255,255,0.18); 
+            letter-spacing: 0.3px;
         }
         
         .dragging { cursor: grabbing !important; }
         .resizing-nwse { cursor: nwse-resize !important; }
         #video-canvas { display: none; }
 
+        /* Cronómetros Principales */
         .timer-value {
-            font-size: 1.25rem; line-height: 1.75rem; white-space: nowrap;
-            color: #111827; font-weight: 900; text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+            font-size: 1.5rem; line-height: 2rem; white-space: nowrap;
+            color: #ffffff; font-weight: 700; letter-spacing: -0.03em;
         }
-        @media (min-width: 640px) { .timer-value { font-size: 1.5rem; line-height: 2rem; } }
+        @media (min-width: 640px) { .timer-value { font-size: 2rem; line-height: 2.25rem; } }
         
+        /* Widgets de Telemetría Estilo macOS Dark */
         .telemetry-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         @media (max-width: 380px) { .telemetry-grid { grid-template-columns: 1fr; } }
 
         .telemetry-item {
-            display: flex; flex-direction: column; padding: 8px; border-radius: 6px;
-            background: linear-gradient(to bottom, #f9fafb, #e5e7eb);
-            border: 1px solid #d1d5db; box-shadow: inset 0 1px 0 #fff, 0 1px 3px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; padding: 12px 14px; border-radius: 12px;
+            background: rgba(44, 44, 46, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.06);
         }
         .telemetry-label {
-            font-size: 0.75rem; font-weight: 700; color: #6b7280; margin-bottom: 2px;
-            text-transform: uppercase; letter-spacing: 0.5px;
+            font-size: 0.7rem; font-weight: 600; color: #98989d; margin-bottom: 4px;
+            text-transform: uppercase; letter-spacing: 0.04em;
         }
-        .telemetry-data { font-size: 0.9rem; font-weight: 800; color: #111827; }
-        .telemetry-data.green { color: #059669; }
-        .telemetry-data.yellow { color: #d97706; }
-        .telemetry-data.cyan { color: #0891b2; }
+        .telemetry-data { font-size: 1rem; font-weight: 700; color: #f5f5f7; }
+        .telemetry-data.green { color: #30d158; }
+        .telemetry-data.yellow { color: #ffd60a; }
+        .telemetry-data.cyan { color: #0a84ff; }
 
         #config-panel {
-            transition: all 0.3s ease-in-out; max-height: 0; overflow: hidden; opacity: 0; transform: translateY(-20px);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 0; overflow: hidden; opacity: 0; transform: translateY(-10px);
         }
-        #config-panel.open { max-height: 1000px; opacity: 1; transform: translateY(0); padding: 16px; margin-top: 16px; }
+        #config-panel.open { max-height: 1100px; opacity: 1; transform: translateY(0); padding: 20px; margin-top: 12px; }
         
+        /* Botones de Control Principal Estilo macOS Dark Toolbar */
         .race-control-btn {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 12px 0; border-radius: 12px;
-            background: linear-gradient(180deg, #f3f4f6 0%, #d1d5db 100%);
-            border: 1px solid #9ca3af; transition: all 0.1s ease;
-            font-size: 0.75rem; font-weight: 700; color: #374151;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 #fff;
+            background: rgba(44, 44, 46, 0.85);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.15s cubic-bezier(0.25, 0.8, 0.25, 1);
+            font-size: 0.75rem; font-weight: 600; color: #f5f5f7;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
         }
-        .race-control-btn:active { box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transform: translateY(1px); }
+        .race-control-btn:hover:not(:disabled) {
+            background: rgba(58, 58, 60, 0.95);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+        .race-control-btn:active:not(:disabled) {
+            transform: scale(0.98);
+            background: rgba(36, 36, 38, 0.95);
+        }
         
-        #start-race-btn.race-control-btn { color: #065f46; border-bottom: 3px solid #065f46; }
-        #start-race-btn.race-control-btn:hover:not(:disabled) { background: linear-gradient(180deg, #d1fae5 0%, #a7f3d0 100%); }
+        #start-race-btn.race-control-btn { color: #30d158; }
+        #start-race-btn.race-control-btn:hover:not(:disabled) { background: rgba(48, 209, 88, 0.18); border-color: rgba(48, 209, 88, 0.4); }
         
-        #reset-race-btn.race-control-btn { color: #991b1b; border-bottom: 3px solid #991b1b; }
-        #reset-race-btn.race-control-btn:hover:not(:disabled) { background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%); }
+        #reset-race-btn.race-control-btn { color: #ff453a; }
+        #reset-race-btn.race-control-btn:hover:not(:disabled) { background: rgba(255, 69, 58, 0.18); border-color: rgba(255, 69, 58, 0.4); }
 
-        #central-config-btn { background: linear-gradient(180deg, #e5e7eb 0%, #9ca3af 100%); border-bottom: 3px solid #4b5563; color: #111827; }
-        #central-config-btn:hover:not(:disabled) { background: linear-gradient(180deg, #f3f4f6 0%, #d1d5db 100%); }
+        #central-config-btn { color: #0a84ff; }
+        #central-config-btn:hover:not(:disabled) { background: rgba(10, 132, 255, 0.18); border-color: rgba(10, 132, 255, 0.4); }
         
         .control-icon { width: 20px; height: 20px; margin-bottom: 4px; }
         @media (max-width: 640px) {
-            .light { width: 20px; height: 20px; }
-            .traffic-light-container.five-lights { gap: 5px; }
+            .light { width: 18px; height: 18px; }
+            .traffic-light-container.five-lights { gap: 6px; padding: 6px 12px; }
             .header-flex { flex-direction: column; }
-            #webcam-feed { max-height: 200px; }
+            #webcam-feed { max-height: 310px; min-height: 240px; }
         }
         
         #lap-graph-canvas {
-            width: 100%; height: 200px; background: #e5e7eb; 
-            border-radius: 6px; border: 1px solid #9ca3af;
-            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.05);
+            width: 100%; height: 200px; 
+            background: rgba(18, 18, 20, 0.7); 
+            border-radius: 10px; 
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
         }
         
+        /* Modales de Diálogo Nativo macOS Dark */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(255, 255, 255, 0.6); backdrop-filter: blur(5px);
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             z-index: 100; display: flex; align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+            opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s ease;
         }
         .modal-overlay.open { opacity: 1; visibility: visible; }
         
         .modal-content {
-            background: linear-gradient(135deg, #ffffff, #dcdcdc);
-            color: #111827; border-radius: 1rem; border: 1px solid #fff;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); max-width: 90%; max-height: 90%;
-            overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease;
+            background: rgba(32, 32, 34, 0.92);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            color: #f5f5f7; 
+            border-radius: 18px; 
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(0,0,0,0.4);
+            max-width: 90%; max-height: 90%;
+            overflow-y: auto; transform: scale(0.95); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .modal-overlay.open .modal-content { transform: scale(1); }
         
         table { width: 100%; text-align: left; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 8px; border-bottom: 1px solid #d1d5db; font-family: Arial, sans-serif; font-size: 0.85rem; color: #374151; }
-        th { color: #111827; text-transform: uppercase; font-weight: 800; border-bottom: 2px solid #9ca3af; }
-        @media (max-width: 400px) { th, td { font-size: 0.75rem; padding: 4px; } }
+        th, td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.85rem; color: #f5f5f7; }
+        th { color: #98989d; text-transform: uppercase; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.04em; border-bottom: 1px solid rgba(255,255,255,0.14); }
+        @media (max-width: 400px) { th, td { font-size: 0.75rem; padding: 6px; } }
         
         /* TEST MESSAGE IN ROI */
         #test-msg {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #10b981; font-weight: 900; font-size: 16px; text-transform: uppercase;
-            text-shadow: 0 0 5px #fff; pointer-events: none;
-            white-space: nowrap; font-family: Arial, sans-serif; display: none;
+            color: #ffffff; background: rgba(48, 209, 88, 0.9);
+            padding: 4px 12px; border-radius: 9999px;
+            font-weight: 700; font-size: 13px; text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4); pointer-events: none;
+            white-space: nowrap; display: none; letter-spacing: 0.03em;
         }
         
+        /* Notificación de Récord Estilo Notificación macOS Dark */
         #record-notification {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: linear-gradient(to right, #fff, #e0e0e0); color: #000;
-            padding: 1rem 2rem; border-radius: 1rem; font-size: 1.5rem; font-weight: 900;
-            border: 4px solid #silver; box-shadow: 0 0 40px rgba(255, 255, 255, 1), 0 0 10px rgba(0,0,0,0.2);
-            z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
-            text-transform: uppercase; letter-spacing: 2px;
+            background: rgba(44, 44, 46, 0.95);
+            backdrop-filter: blur(20px);
+            color: #ffffff;
+            padding: 1rem 2rem; border-radius: 16px; font-size: 1.25rem; font-weight: 800;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s;
+            text-transform: uppercase; letter-spacing: 1px;
         }
-        #record-notification.show { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+        #record-notification.show { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
         
-        .toggle-checkbox:checked { right: 0; border-color: #6b7280; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #9ca3af; }
+        /* Switch Estilo macOS System Settings */
+        .toggle-checkbox:checked { right: 0; border-color: #30d158; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #30d158; border-color: #30d158; }
         
         .btn-adjust {
-            background: linear-gradient(to bottom, #fff, #e5e7eb); border: 1px solid #9ca3af;
-            color: #374151; box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+            background: #2c2c2e; border: 1px solid rgba(255,255,255,0.16);
+            color: #f5f5f7; border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            transition: all 0.15s ease;
         }
-        .btn-adjust:active { background: #d1d5db; box-shadow: inset 0 2px 2px rgba(0,0,0,0.1); }
+        .btn-adjust:hover { background: #3a3a3c; }
+        .btn-adjust:active { background: #48484a; transform: scale(0.96); }
         
-        /* --- NUEVOS ESTILOS PARA V2 --- */
+        /* --- OVERLAYS --- */
         .calib-overlay {
             position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.8); color: #fff; display: flex;
+            background: rgba(18, 18, 20, 0.85); color: #fff; display: flex;
             flex-direction: column; justify-content: center; align-items: center;
-            z-index: 50; display: none; backdrop-filter: blur(2px); font-family: Arial, sans-serif;
+            z-index: 50; display: none; backdrop-filter: blur(8px);
         }
         .calib-overlay.active { display: flex; }
         
         .spinner {
-            border: 6px solid #333; border-top: 6px solid #fff;
-            border-radius: 50%; width: 50px; height: 50px;
-            animation: spin 1s linear infinite; margin-bottom: 20px;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid #ffffff;
+            border-radius: 50%; width: 44px; height: 44px;
+            animation: spin 0.9s linear infinite; margin-bottom: 16px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         #false-start-alert {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 90%; background: linear-gradient(to bottom, #991b1b, #7f1d1d); 
-            border: 4px solid #fff; box-shadow: 0 0 30px #991b1b;
-            color: #fff; text-align: center; padding: 1.5rem; border-radius: 1rem;
-            z-index: 60; display: none; font-family: Arial, sans-serif;
+            width: 85%; background: rgba(255, 69, 58, 0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 20px 50px rgba(255, 69, 58, 0.45);
+            color: #fff; text-align: center; padding: 1.5rem; border-radius: 16px;
+            z-index: 60; display: none;
         }
         #false-start-alert.show { display: block; animation: pulse 0.5s infinite alternate; }
-        @keyframes pulse { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.05); } }
+        @keyframes pulse { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.03); } }
 
         /* --- BANDERA AMARILLA (PAUSA) --- */
         #yellow-flag-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(18, 18, 20, 0.82);
             z-index: 40; display: none;
             flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(2px);
+            backdrop-filter: blur(6px);
         }
         #yellow-flag-overlay.active { display: flex; }
-        .yellow-flag-icon { width: 64px; height: 64px; color: #facc15; animation: wave 1s infinite ease-in-out; }
+        .yellow-flag-icon { width: 56px; height: 56px; color: #ffd60a; animation: wave 1s infinite ease-in-out; }
         @keyframes wave { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
     </style>
 </head>
 <body>
     <div class="container w-full max-w-3xl mx-auto p-4">
 
-        <!-- HEADER SILVER -->
-        <div class="silver-panel flex flex-col sm:flex-row justify-between items-center w-full py-3 px-4 mt-4 mb-4 header-flex">
-            <div class="flex items-center space-x-2 mb-2 sm:mb-0">
-                <div class="flex flex-col mr-3">
-                    <h1 class="text-base sm:text-lg neon-silver-title tracking-wider leading-tight">
-                        KRONO V.3.0
+        <!-- BARRA SUPERIOR DE VENTANA MACOS DARK (SIN LAS 3 REDONDAS) -->
+        <div class="silver-panel flex flex-col sm:flex-row justify-between items-center w-full py-3.5 px-5 mt-2 mb-4 header-flex">
+            <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+                <div class="flex flex-col mr-2">
+                    <h1 class="text-base sm:text-lg neon-silver-title tracking-tight leading-tight">
+                        KRONO PERSONAL LITE
                     </h1>
-                    <span class="text-[10px] font-normal text-gray-500">By Albert Closa</span>
+                    <span class="text-[11px] font-medium text-gray-400">By Albert Closa</span>
                 </div>
                 
-                <button id="history-btn" class="flex items-center text-gray-500 hover:text-black transition-colors px-3 py-1 rounded-full hover:bg-gray-200 border border-transparent hover:border-gray-300 group" title="Ver Historial">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-history mr-2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/><path d="M3 3v9h9"/><path d="M12 7v5l4 2"/></svg>
-                    <span class="text-xs font-bold uppercase tracking-wider" data-i18n="history">Historial</span>
+                <button id="history-btn" class="flex items-center text-gray-200 hover:text-white transition-all px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 shadow-sm group" title="Ver Historial">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-history mr-1.5 text-[#0a84ff]"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/><path d="M3 3v9h9"/><path d="M12 7v5l4 2"/></svg>
+                    <span class="text-xs font-semibold" data-i18n="history">Historial</span>
                 </button>
                 
-                <button id="fullscreen-btn" class="flex items-center text-gray-500 hover:text-black transition-colors px-3 py-1 rounded-full hover:bg-gray-200 border border-transparent hover:border-gray-300 group" title="Pantalla Completa">
-                     <svg id="fs-icon-enter" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-                     <svg id="fs-icon-exit" class="hidden lucide lucide-minimize" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+                <button id="fullscreen-btn" class="flex items-center text-gray-200 hover:text-white transition-all p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 shadow-sm group" title="Pantalla Completa">
+                     <svg id="fs-icon-enter" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                     <svg id="fs-icon-exit" class="hidden lucide lucide-minimize" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
                 </button>
             </div>
             <div id="traffic-light-module" class="traffic-light-container five-lights mt-2 sm:mt-0">
@@ -364,16 +442,16 @@
             </div>
         </div>
         
-        <!-- CONFIG PANEL SILVER -->
+        <!-- CONFIG PANEL ESTILO SYSTEM SETTINGS MACOS DARK -->
         <div id="config-panel" class="silver-panel w-full mb-4">
-            <!-- LANGUAGE SELECTOR ADDED HERE (Unobtrusive) -->
-            <div class="mb-4 border-b border-gray-300 pb-2">
+            <!-- LANGUAGE SELECTOR -->
+            <div class="mb-4 border-b border-white/10 pb-3">
                  <div class="flex items-center justify-between">
-                     <label for="lang-select" class="text-xs font-bold text-gray-500 uppercase flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                     <label for="lang-select" class="text-xs font-semibold text-gray-400 uppercase flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-[#0a84ff]"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                         <span data-i18n="langLabel">Idioma / Language</span>
                      </label>
-                     <select id="lang-select" class="silver-input p-1 rounded-md text-sm font-bold w-1/2">
+                     <select id="lang-select" class="silver-input py-1.5 px-3 font-medium w-1/2">
                          <option value="es">Español</option>
                          <option value="en">English</option>
                          <option value="fr">Français</option>
@@ -381,24 +459,24 @@
                  </div>
             </div>
 
-            <h2 class="text-base neon-silver-title mb-3 border-b border-gray-300 pb-2 flex items-center justify-start">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-cog mr-2 text-gray-500"><path d="M18 21a8 8 0 0 0-8-8c-2 0-4-.5-6-1"/><circle cx="10" cy="8" r="5"/><circle cx="19" cy="18" r="3"/><path d="m19 21-1-1.09c-.38-.41-.58-1.12-.2-1.76l.73-1.22c.26-.43.5-.96.48-1.5-.02-.54-.28-1.03-.76-1.3l-.76-.41c-.48-.26-1.11-.47-1.46-.86-.34-.39-.47-.94-.36-1.45l.23-1.07c.1-.47-.1-.99-.54-1.29l-1.01-.71c-.43-.3-.98-.38-1.5-.23-.52.14-1.13-.1-.95-.62l.33-1.04c.16-.5-.16-1-.59-1.32l-1.1-.98c-.43-.3-.93-.32-1.4-.05-.47.26-1.04.42-1.61.37-.56-.05-1.1-.3-1.37-.73l-.7-1.1c-.26-.43-.5-.96-.48-1.5"/><circle cx="12" cy="12" r="3"/></svg>
+            <h2 class="text-base neon-silver-title mb-3 border-b border-white/10 pb-2 flex items-center justify-start">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-cog mr-2 text-[#0a84ff]"><path d="M18 21a8 8 0 0 0-8-8c-2 0-4-.5-6-1"/><circle cx="10" cy="8" r="5"/><circle cx="19" cy="18" r="3"/><path d="m19 21-1-1.09c-.38-.41-.58-1.12-.2-1.76l.73-1.22c.26-.43.5-.96.48-1.5-.02-.54-.28-1.03-.76-1.3l-.76-.41c-.48-.26-1.11-.47-1.46-.86-.34-.39-.47-.94-.36-1.45l.23-1.07c.1-.47-.1-.99-.54-1.29l-1.01-.71c-.43-.3-.98-.38-1.5-.23-.52.14-1.13-.1-.95-.62l.33-1.04c.16-.5-.16-1-.59-1.32l-1.1-.98c-.43-.3-.93-.32-1.4-.05-.47.26-1.04.42-1.61.37-.56-.05-1.1-.3-1.37-.73l-.7-1.1c-.26-.43-.5-.96-.48-1.5"/><circle cx="12" cy="12" r="3"/></svg>
                 <span data-i18n="pilotDataTitle">Datos Piloto y Pista</span>
             </h2>
             <div class="space-y-4">
                  <div>
-                    <label for="pilot-name-input" class="block text-xs font-bold text-gray-500 mb-1 uppercase" data-i18n="pilotName">Nombre del Piloto</label>
-                    <input type="text" id="pilot-name-input" value="Racer 1" class="silver-input w-full p-2 rounded-md" />
+                    <label for="pilot-name-input" class="block text-xs font-semibold text-gray-400 mb-1 uppercase" data-i18n="pilotName">Nombre del Piloto</label>
+                    <input type="text" id="pilot-name-input" value="Racer 1" class="silver-input w-full p-2" />
                 </div>
                 <div>
-                    <label for="car-model-input" class="block text-xs font-bold text-gray-500 mb-1 uppercase" data-i18n="carModel">Modelo del Coche</label>
-                    <input type="text" id="car-model-input" value="Porsche 911" class="silver-input w-full p-2 rounded-md" />
+                    <label for="car-model-input" class="block text-xs font-semibold text-gray-400 mb-1 uppercase" data-i18n="carModel">Modelo del Coche</label>
+                    <input type="text" id="car-model-input" value="Porsche 911" class="silver-input w-full p-2" />
                 </div>
                 
-                <!-- NUEVO: SELECTOR DE MODO -->
+                <!-- SELECTOR DE MODO -->
                 <div>
-                    <label for="race-mode-select" class="block text-xs font-bold text-blue-700 mb-1 uppercase" data-i18n="raceMode">Modo de Carrera</label>
-                    <select id="race-mode-select" class="silver-input w-full p-2 rounded-md font-bold">
+                    <label for="race-mode-select" class="block text-xs font-semibold text-[#0a84ff] mb-1 uppercase" data-i18n="raceMode">Modo de Carrera</label>
+                    <select id="race-mode-select" class="silver-input w-full p-2 font-semibold">
                         <option value="laps" selected data-i18n="modeLaps">Por Vueltas</option>
                         <option value="time" data-i18n="modeTime">Por Tiempo</option>
                     </select>
@@ -406,14 +484,14 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label for="track-length-input" class="block text-xs font-bold text-gray-500 mb-1 uppercase" data-i18n="trackLength">Longitud Pista (m)</label>
-                        <input type="number" id="track-length-input" value="15" min="1" step="0.5" class="silver-input w-full p-2 rounded-md" />
+                        <label for="track-length-input" class="block text-xs font-semibold text-gray-400 mb-1 uppercase" data-i18n="trackLength">Longitud Pista (m)</label>
+                        <input type="number" id="track-length-input" value="15" min="1" step="0.5" class="silver-input w-full p-2" />
                     </div>
                     <div>
                         <!-- MODO VUELTAS (DEFAULT) -->
                         <div id="laps-config-container">
-                            <label for="lap-limit-select" class="block text-xs font-bold text-gray-500 mb-1 flex items-center uppercase" data-i18n="lapLimit">Límite Vueltas</label>
-                            <select id="lap-limit-select" class="silver-input w-full p-2 rounded-md">
+                            <label for="lap-limit-select" class="block text-xs font-semibold text-gray-400 mb-1 flex items-center uppercase" data-i18n="lapLimit">Límite Vueltas</label>
+                            <select id="lap-limit-select" class="silver-input w-full p-2">
                                 <option value="5" data-i18n="5laps">5 Vueltas</option>
                                 <option value="10" selected data-i18n="10laps">10 Vueltas</option>
                                 <option value="25" data-i18n="25laps">25 Vueltas</option>
@@ -423,8 +501,8 @@
                         </div>
                         <!-- MODO TIEMPO (HIDDEN) -->
                         <div id="time-config-container" class="hidden">
-                            <label for="time-limit-select" class="block text-xs font-bold text-gray-500 mb-1 flex items-center uppercase" data-i18n="timeLimit">Tiempo Límite</label>
-                            <select id="time-limit-select" class="silver-input w-full p-2 rounded-md">
+                            <label for="time-limit-select" class="block text-xs font-semibold text-gray-400 mb-1 flex items-center uppercase" data-i18n="timeLimit">Tiempo Límite</label>
+                            <select id="time-limit-select" class="silver-input w-full p-2">
                                 <option value="5">5 Min</option>
                                 <option value="10" selected>10 Min</option>
                                 <option value="15">15 Min</option>
@@ -437,13 +515,13 @@
                         </div>
                     </div>
                 </div>
-                <!-- NUEVO: TIEMPO DE SEGURIDAD -->
+                <!-- TIEMPO DE SEGURIDAD -->
                 <div>
-                    <label for="safety-time-select" class="block text-xs font-bold text-red-700 mb-1 uppercase flex items-center">
+                    <label for="safety-time-select" class="block text-xs font-semibold text-[#ff453a] mb-1 uppercase flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                         <span data-i18n="safetyTime">Tiempo de Seguridad (Anti-Rebote)</span>
                     </label>
-                    <select id="safety-time-select" class="silver-input w-full p-2 rounded-md font-bold">
+                    <select id="safety-time-select" class="silver-input w-full p-2 font-medium">
                         <option value="1000" data-i18n="1sec">1 Segundo (Pistas muy cortas)</option>
                         <option value="3000" selected data-i18n="3sec">3 Segundos (Estándar)</option>
                         <option value="5000" data-i18n="5sec">5 Segundos (Pistas largas)</option>
@@ -452,21 +530,21 @@
                 </div>
             </div>
 
-            <div class="mt-6 mb-4 border-b border-gray-300 pb-2">
+            <div class="mt-6 mb-4 border-b border-white/10 pb-2">
                 <h2 class="text-base neon-silver-title flex items-center justify-start mb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-2 mr-2 text-gray-500"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-2 mr-2 text-[#0a84ff]"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
                     <span data-i18n="audioSettings">Ajustes de Audio</span>
                 </h2>
                 <div class="flex items-center justify-between mb-4">
-                    <label for="voice-toggle" class="text-sm font-bold text-gray-600" data-i18n="engineerVoice">Voz Ingeniero:</label>
+                    <label for="voice-toggle" class="text-sm font-medium text-gray-300" data-i18n="engineerVoice">Voz Ingeniero:</label>
                     <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="voice-toggle" id="voice-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-400 appearance-none cursor-pointer" checked/>
-                        <label for="voice-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer border border-gray-400"></label>
+                        <input type="checkbox" name="voice-toggle" id="voice-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-gray-600 appearance-none cursor-pointer shadow-sm" checked/>
+                        <label for="voice-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer border border-gray-600"></label>
                     </div>
                 </div>
                 <div class="mb-2">
-                    <label for="soundSelect" class="block text-xs font-bold text-gray-500 mb-1 uppercase" data-i18n="lapTone">Tono de Vuelta</label>
-                    <select id="soundSelect" class="silver-input w-full p-2 rounded-md">
+                    <label for="soundSelect" class="block text-xs font-semibold text-gray-400 mb-1 uppercase" data-i18n="lapTone">Tono de Vuelta</label>
+                    <select id="soundSelect" class="silver-input w-full p-2">
                         <option value="0" data-i18n="beepClassic">Beep Clásico (600 Hz)</option>
                         <option value="1" data-i18n="toneLow">Tono Grave (400 Hz)</option>
                         <option value="2" data-i18n="beepHigh">Beep Agudo (900 Hz)</option>
@@ -475,107 +553,110 @@
                 </div>
             </div>
 
-            <h2 class="text-base neon-silver-title mt-6 mb-3 border-b border-gray-300 pb-2 flex items-center justify-start">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off mr-2 text-gray-500"><path d="M10.5 17.5a6.5 6.5 0 0 0 6-6"/><path d="M2 2l20 20"/><path d="M6.5 13.5a6.5 6.5 0 0 1 6-6"/><path d="M22 12c-.5-1.5-2.5-4.5-5.5-5.5"/><path d="M10 12c0 1 1.5 2 3 2s3-1 3-2"/></svg>
+            <h2 class="text-base neon-silver-title mt-6 mb-3 border-b border-white/10 pb-2 flex items-center justify-start">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off mr-2 text-[#0a84ff]"><path d="M10.5 17.5a6.5 6.5 0 0 0 6-6"/><path d="M2 2l20 20"/><path d="M6.5 13.5a6.5 6.5 0 0 1 6-6"/><path d="M22 12c-.5-1.5-2.5-4.5-5.5-5.5"/><path d="M10 12c0 1 1.5 2 3 2s3-1 3-2"/></svg>
                 <span data-i18n="aiSens">Sensibilidad IA</span>
             </h2>
-            <label for="threshold-slider" class="block text-sm font-medium text-gray-600 mb-2" data-i18n="sensAdjust">
+            <label for="threshold-slider" class="block text-sm font-medium text-gray-300 mb-2" data-i18n="sensAdjust">
                 Ajuste de Sensibilidad de Cambio
             </label>
             
             <div class="flex items-center space-x-3">
-                <button id="threshold-minus" class="btn-adjust w-10 h-10 rounded flex items-center justify-center font-bold"> - </button>
+                <button id="threshold-minus" class="btn-adjust w-10 h-10 flex items-center justify-center font-bold"> - </button>
                 <div class="flex-1">
-                    <input type="range" id="threshold-slider" min="5" max="100" value="20" class="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer accent-gray-600">
-                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <input type="range" id="threshold-slider" min="5" max="100" value="20" class="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#0a84ff]">
+                    <div class="flex justify-between text-xs text-gray-400 mt-1.5">
                         <span data-i18n="verySens">Muy Sensible (5)</span>
-                        <span id="current-threshold" class="font-bold text-gray-800">20</span>
+                        <span id="current-threshold" class="font-bold text-[#0a84ff]">20</span>
                         <span data-i18n="lessSens">Poco Sensible (100)</span>
                     </div>
                 </div>
-                <button id="threshold-plus" class="btn-adjust w-10 h-10 rounded flex items-center justify-center font-bold"> + </button>
+                <button id="threshold-plus" class="btn-adjust w-10 h-10 flex items-center justify-center font-bold"> + </button>
             </div>
             
-            <p class="text-xs text-gray-500 mt-2" data-i18n="autoCalibHelp">Usa "Auto Calibrar" para que la IA decida el mejor valor por ti.</p>
+            <p class="text-xs text-gray-400 mt-2" data-i18n="autoCalibHelp">Usa "Auto Calibrar" para que la IA decida el mejor valor por ti.</p>
         </div>
         
-        <!-- PANEL DE TIEMPO -->
-        <div class="silver-panel w-full p-4 mb-4 text-center">
+        <!-- PANEL DE TIEMPO PRINCIPAL -->
+        <div class="silver-panel w-full p-5 mb-4 text-center">
             <div class="flex justify-around items-end space-x-4 mb-2">
                 <div class="flex-1">
-                    <p class="text-xs text-gray-500 font-bold tracking-widest" data-i18n="raceTime">TIEMPO CARRERA</p>
+                    <p class="text-[11px] text-gray-400 font-semibold tracking-wider uppercase mb-1" data-i18n="raceTime">TIEMPO CARRERA</p>
                     <p id="race-time" class="timer-value font-arial">00:00.000</p>
                 </div>
-                <div class="flex-1 border-l border-gray-400 pl-4 flex flex-col justify-end">
-                    <p class="text-xs text-gray-500 font-bold tracking-widest" data-i18n="laps">VUELTAS</p>
-                    <p id="lap-count" class="timer-value font-arial text-gray-800">0 / 10</p> 
-                    <!-- NUEVO: TARGET DISPLAY FOR TIME MODE -->
-                    <p id="mode-target-display" class="text-xs text-blue-700 font-bold mt-0 font-arial hidden">--</p>
+                <div class="flex-1 border-l border-white/10 pl-4 flex flex-col justify-end">
+                    <p class="text-[11px] text-gray-400 font-semibold tracking-wider uppercase mb-1" data-i18n="laps">VUELTAS</p>
+                    <p id="lap-count" class="timer-value font-arial text-white">0 / 10</p> 
+                    <p id="mode-target-display" class="text-xs text-[#0a84ff] font-semibold mt-0.5 font-arial hidden">--</p>
                 </div>
             </div>
-            <p id="lap-time" class="text-sm text-gray-600 mt-2 font-arial font-bold">00.000</p>
+            <div class="inline-block bg-white/10 px-4 py-1 rounded-full mt-2">
+                <p id="lap-time" class="text-sm text-gray-200 font-arial font-semibold">00.000</p>
+            </div>
         </div>
 
+        <!-- BOTONES DE CONTROL DE CARRERA -->
         <div class="w-full flex space-x-3 mb-4">
-            <button id="start-race-btn" class="flex-1 race-control-btn disabled:opacity-50 disabled:cursor-not-allowed">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="control-icon text-green-700"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <button id="start-race-btn" class="flex-1 race-control-btn disabled:opacity-40 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="control-icon text-[#30d158]"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 <span data-i18n="start">INICIAR</span>
             </button>
             
-            <button id="central-config-btn" class="flex-1 race-control-btn disabled:opacity-50 disabled:cursor-not-allowed">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon text-gray-600"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.78 1.35a2 2 0 0 0 .73 2.73l.15.08a2 2 0 0 1 1 1.73v.52a2 2 0 0 1-1 1.73l-.15.08a2 2 0 0 0-.73 2.73l.78 1.35a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V2a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <button id="central-config-btn" class="flex-1 race-control-btn disabled:opacity-40 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon text-[#0a84ff]"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.78 1.35a2 2 0 0 0 .73 2.73l.15.08a2 2 0 0 1 1 1.73v.52a2 2 0 0 1-1 1.73l-.15.08a2 2 0 0 0-.73 2.73l.78 1.35a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V2a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
                 CONFIG
             </button>
             
-            <button id="reset-race-btn" class="flex-1 race-control-btn disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon text-red-700"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+            <button id="reset-race-btn" class="flex-1 race-control-btn disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="control-icon text-[#ff453a]"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
                 <span data-i18n="reset">REINICIAR</span>
             </button>
         </div>
 
-        <div id="video-feed-box" class="silver-panel px-4 py-3 w-full mb-4 relative">
-            <div class="flex justify-between items-center border-b border-gray-300 pb-2 mb-2">
+        <!-- PANEL DE VÍDEO Y CÁMARA -->
+        <div id="video-feed-box" class="silver-panel px-5 py-4 w-full mb-4 relative">
+            <div class="flex justify-between items-center border-b border-white/10 pb-3 mb-3">
                 <h2 class="text-base neon-silver-title" data-i18n="videoTitle">Video de Pista y ROI</h2>
-                <div class="flex space-x-2">
-                    <button id="calibrate-btn" class="p-2 px-3 rounded-md bg-gray-200 text-gray-700 border border-gray-300 hover:bg-white hover:text-black text-xs font-bold uppercase transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="autoCalib">
+                <div class="flex items-center space-x-2">
+                    <button id="calibrate-btn" class="py-1.5 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-gray-100 border border-white/15 text-xs font-semibold transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed" data-i18n="autoCalib">
                         Auto Calibrar
                     </button>
-                    <button id="camera-on-btn" class="p-2 rounded-full bg-gradient-to-br from-green-400 to-green-600 text-white hover:from-green-500 hover:to-green-700 disabled:opacity-50 transition shadow-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    <button id="camera-on-btn" class="p-2 rounded-full bg-[#30d158] text-white hover:bg-[#28b84c] disabled:opacity-40 transition shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
                     </button>
-                    <button id="camera-off-btn" class="p-2 rounded-full bg-gradient-to-br from-red-400 to-red-600 text-white hover:from-red-500 hover:to-red-700 disabled:opacity-50 transition shadow-md" disabled>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera-off"><path d="M2 2l20 20"/><path d="M4.5 17H4a2 2 0 0 1-2-2v-3h18.5"/><path d="M22 15a2 2 0 0 0-2-2h-1l-2.5-3h-2.5"/><path d="M9.5 4h5L17 7h3a2 2 0 0 1 2 2v1"/><path d="M14.5 17a3 3 0 1 1-5.6-2.5"/></svg>
+                    <button id="camera-off-btn" class="p-2 rounded-full bg-[#ff453a] text-white hover:bg-[#e0382d] disabled:opacity-40 transition shadow-sm" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera-off"><path d="M2 2l20 20"/><path d="M4.5 17H4a2 2 0 0 1-2-2v-3h18.5"/><path d="M22 15a2 2 0 0 0-2-2h-1l-2.5-3h-2.5"/><path d="M9.5 4h5L17 7h3a2 2 0 0 1 2 2v1"/><path d="M14.5 17a3 3 0 1 1-5.6-2.5"/></svg>
                     </button>
                 </div>
             </div>
             
-            <div id="camera-error-alert" class="hidden bg-red-100 border border-red-400 text-red-700 py-3 rounded-md mb-3">
-                <span id="camera-error-text" class="block sm:inline font-bold text-sm"></span>
+            <div id="camera-error-alert" class="hidden bg-red-950/80 border border-red-500/40 text-red-200 px-4 py-3 rounded-xl mb-3">
+                <span id="camera-error-text" class="block sm:inline font-semibold text-sm"></span>
             </div>
             
             <div id="record-notification" data-i18n="newRecord">¡NUEVO RÉCORD!</div>
 
             <div id="video-container">
-                <video id="webcam-feed" class="w-full shadow-inner" autoplay playsinline></video>
+                <video id="webcam-feed" class="w-full" autoplay playsinline></video>
                 
-                <!-- NUEVO: OVERLAY DE CALIBRACION -->
+                <!-- OVERLAY DE CALIBRACION -->
                 <div id="calib-overlay" class="calib-overlay">
                     <div class="spinner"></div>
-                    <h3 class="text-xl font-black uppercase tracking-widest drop-shadow-md" data-i18n="calibrating">Calibrando...</h3>
-                    <p class="text-sm mt-2 font-bold bg-black/50 px-4 py-1 rounded-full" data-i18n="clearTrack">Despeja la pista</p>
+                    <h3 class="text-lg font-bold tracking-tight" data-i18n="calibrating">Calibrando...</h3>
+                    <p class="text-xs mt-2 font-medium bg-white/20 px-4 py-1 rounded-full" data-i18n="clearTrack">Despeja la pista</p>
                 </div>
 
-                <!-- NUEVO: ALERTA DE SALIDA NULA -->
+                <!-- ALERTA DE SALIDA NULA -->
                 <div id="false-start-alert">
-                    <h2 class="text-3xl font-black uppercase tracking-widest mb-2 text-white drop-shadow-md" data-i18n="falseStart">¡SALIDA NULA!</h2>
-                    <p class="text-xl font-bold text-yellow-300" data-i18n="penalty">Penalización aplicada</p>
+                    <h2 class="text-2xl font-extrabold uppercase tracking-tight mb-1 text-white" data-i18n="falseStart">¡SALIDA NULA!</h2>
+                    <p class="text-base font-medium text-white/90" data-i18n="penalty">Penalización aplicada</p>
                 </div>
 
-                <!-- NUEVO: OVERLAY BANDERA AMARILLA -->
+                <!-- OVERLAY BANDERA AMARILLA -->
                 <div id="yellow-flag-overlay">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" class="yellow-flag-icon"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
-                    <h3 class="text-3xl font-black text-yellow-400 uppercase tracking-widest mt-2" data-i18n="yellowFlag">BANDERA AMARILLA</h3>
-                    <p class="text-white font-bold text-lg" data-i18n="racePaused">CARRERA PAUSADA</p>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="currentColor" class="yellow-flag-icon"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+                    <h3 class="text-2xl font-extrabold text-yellow-400 uppercase tracking-tight mt-2" data-i18n="yellowFlag">BANDERA AMARILLA</h3>
+                    <p class="text-white/90 font-medium text-sm mt-0.5" data-i18n="racePaused">CARRERA PAUSADA</p>
                 </div>
 
                 <div id="movable-rectangle">
@@ -586,17 +667,16 @@
                 </div>
             </div>
             <canvas id="video-canvas"></canvas>
-            <div id="video-status" class="text-center text-sm mt-2 text-gray-500 font-semibold tracking-wide" data-i18n="camLoading">Cargando cámara...</div>
+            <div id="video-status" class="text-center text-xs mt-2.5 text-gray-400 font-medium" data-i18n="camLoading">Cargando cámara...</div>
         </div>
 
         <!-- TELEMETRIA -->
-        <div class="silver-panel w-full p-4 mb-4">
-            <!-- HEADER DE TELEMETRIA MODIFICADO -->
-            <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
-                <h2 class="text-base neon-silver-title uppercase tracking-widest text-left" data-i18n="telemetry">Telemetría</h2>
-                <button id="pause-btn" class="flex items-center px-3 py-1 rounded-md bg-gray-200 text-gray-700 border border-gray-300 hover:bg-white text-xs font-bold uppercase transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="mr-1"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                    <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="mr-1 hidden"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <div class="silver-panel w-full p-5 mb-4">
+            <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
+                <h2 class="text-base neon-silver-title text-left" data-i18n="telemetry">Telemetría</h2>
+                <button id="pause-btn" class="flex items-center px-3 py-1.5 rounded-lg bg-white/10 text-gray-200 border border-white/15 hover:bg-white/20 text-xs font-semibold transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed">
+                    <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="mr-1.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="mr-1.5 hidden"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     <span id="pause-text" data-i18n="pause">PAUSA</span>
                 </button>
             </div>
@@ -629,65 +709,66 @@
             </div>
         </div>
 
-        <div class="silver-panel w-full p-4 mb-4">
-            <h2 class="text-base neon-silver-title mb-4 border-b border-gray-300 pb-2 uppercase tracking-widest text-left" data-i18n="timeGraph">Gráfica de Tiempos</h2>
+        <!-- GRÁFICA DE TIEMPOS -->
+        <div class="silver-panel w-full p-5 mb-4">
+            <h2 class="text-base neon-silver-title mb-4 border-b border-white/10 pb-3 text-left" data-i18n="timeGraph">Gráfica de Tiempos</h2>
             <canvas id="lap-graph-canvas"></canvas>
-            <p id="graph-status" class="text-center text-sm text-gray-500 mt-2 italic" data-i18n="noData">Sin datos</p>
+            <p id="graph-status" class="text-center text-xs text-gray-400 mt-2.5 font-medium" data-i18n="noData">Sin datos</p>
         </div>
     </div>
 
-    <!-- MODAL DE RESULTADOS FINALES NEON -->
+    <!-- MODAL DE RESULTADOS FINALES ESTILO MACOS DARK -->
     <div id="resultsModal" class="modal-overlay hidden">
-        <div class="modal-content p-6 w-full max-w-lg neon-border-box">
-            <div class="text-center mb-6">
-                <div class="inline-block p-3 rounded-full bg-gray-100 mb-3 border border-gray-300 shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-500"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14h4"/><path d="M12 17v5"/><path d="M21 17.02l.7-4.14a2 2 0 0 0-1.92-2.14H4.22a2 2 0 0 0-1.92 2.14l.7 4.14"/><path d="M15 17H9"/></svg>
+        <div class="modal-content p-6 w-full max-w-lg">
+            <div class="text-center mb-5">
+                <div class="inline-flex p-3.5 rounded-2xl bg-yellow-500/15 mb-3 border border-yellow-500/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-400"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14h4"/><path d="M12 17v5"/><path d="M21 17.02l.7-4.14a2 2 0 0 0-1.92-2.14H4.22a2 2 0 0 0-1.92 2.14l.7 4.14"/><path d="M15 17H9"/></svg>
                 </div>
-                <h3 class="text-2xl font-extrabold text-gray-800 uppercase tracking-wider" data-i18n="raceFinished">¡Carrera Finalizada!</h3>
+                <h3 class="text-xl font-bold text-white tracking-tight" data-i18n="raceFinished">¡Carrera Finalizada!</h3>
             </div>
             
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <div class="col-span-2 bg-gray-100 p-3 rounded-lg border border-gray-300 shadow-inner">
-                    <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="pilotCar">Piloto / Coche</div>
-                    <div id="modal-pilot-car" class="text-gray-900 font-bold text-lg truncate"></div>
+            <div class="grid grid-cols-2 gap-3 mb-5">
+                <div class="col-span-2 bg-white/5 p-3.5 rounded-xl border border-white/10">
+                    <div class="text-[11px] text-gray-400 uppercase font-semibold mb-0.5" data-i18n="pilotCar">Piloto / Coche</div>
+                    <div id="modal-pilot-car" class="text-white font-bold text-base truncate"></div>
                 </div>
-                <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 shadow-inner">
-                    <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="totalTime">Tiempo Total</div>
-                    <div id="modal-total-time" class="text-gray-800 font-arial font-bold text-lg"></div>
+                <div class="bg-white/5 p-3.5 rounded-xl border border-white/10">
+                    <div class="text-[11px] text-gray-400 uppercase font-semibold mb-0.5" data-i18n="totalTime">Tiempo Total</div>
+                    <div id="modal-total-time" class="text-white font-arial font-bold text-base"></div>
                 </div>
-                <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 relative overflow-hidden shadow-inner">
-                    <div class="absolute top-0 right-0 p-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-green-600"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <div class="bg-green-500/15 p-3.5 rounded-xl border border-green-500/30 relative overflow-hidden">
+                    <div class="absolute top-2 right-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-[#30d158]"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     </div>
-                    <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="bestLap">Mejor Vuelta</div>
-                    <div id="modal-best-lap" class="text-green-700 font-arial font-bold text-lg"></div>
+                    <div class="text-[11px] text-green-300 uppercase font-semibold mb-0.5" data-i18n="bestLap">Mejor Vuelta</div>
+                    <div id="modal-best-lap" class="text-[#30d158] font-arial font-bold text-base"></div>
                 </div>
-                <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 shadow-inner">
-                    <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="avg">Media</div>
-                    <div id="modal-average-time" class="text-gray-800 font-arial font-bold"></div>
+                <div class="bg-white/5 p-3.5 rounded-xl border border-white/10">
+                    <div class="text-[11px] text-gray-400 uppercase font-semibold mb-0.5" data-i18n="avg">Media</div>
+                    <div id="modal-average-time" class="text-white font-arial font-bold"></div>
                 </div>
-                <div class="bg-gray-100 p-3 rounded-lg border border-gray-300 shadow-inner">
-                    <div class="text-xs text-gray-500 uppercase font-bold mb-1" data-i18n="avgSpeedSimple">Vel. Media</div>
-                    <div id="modal-avg-speed" class="text-gray-800 font-bold font-arial"></div>
+                <div class="bg-white/5 p-3.5 rounded-xl border border-white/10">
+                    <div class="text-[11px] text-gray-400 uppercase font-semibold mb-0.5" data-i18n="avgSpeedSimple">Vel. Media</div>
+                    <div id="modal-avg-speed" class="text-white font-bold font-arial"></div>
                 </div>
             </div>
 
-            <div class="mb-6 bg-white rounded-lg border border-gray-300 overflow-hidden shadow-sm">
-                <div class="bg-gray-200 px-4 py-2 border-b border-gray-300">
-                    <h4 class="text-sm font-bold text-gray-600 uppercase tracking-widest" data-i18n="lapDetail">Detalle de Vueltas</h4>
+            <div class="mb-5 bg-black/40 rounded-xl border border-white/10 overflow-hidden">
+                <div class="bg-white/5 px-4 py-2 border-b border-white/10">
+                    <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider" data-i18n="lapDetail">Detalle de Vueltas</h4>
                 </div>
                 <div class="max-h-40 overflow-y-auto">
                     <table id="lap-history-table" class="w-full text-sm">
-                        <thead class="bg-gray-100 sticky top-0"><tr><th class="text-gray-600 py-2 px-4">#</th><th class="text-gray-600 py-2 px-4" data-i18n="time">Tiempo</th><th class="text-gray-600 py-2 px-4">Km/h</th></tr></thead>
-                        <tbody id="lap-history-body" class="text-gray-700 divide-y divide-gray-200"></tbody>
+                        <thead class="bg-[#1c1c1e] sticky top-0"><tr><th class="py-2 px-4">#</th><th class="py-2 px-4" data-i18n="time">Tiempo</th><th class="py-2 px-4">Km/h</th></tr></thead>
+                        <tbody id="lap-history-body" class="text-gray-200 divide-y divide-white/5"></tbody>
                     </table>
                 </div>
             </div>
             
-            <button id="modal-restart-btn" class="w-full bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center transform hover:scale-[1.02]" data-i18n="restartFull">
+            <button id="modal-restart-btn" class="w-full bg-[#0a84ff] hover:bg-[#0070e0] text-white font-semibold py-3 rounded-xl shadow-sm transition-all duration-150 flex items-center justify-center text-sm" data-i18n="restartFull">
                 VOLVER A EMPEZAR
             </button>
-            <button id="export-excel-btn" class="mt-3 w-full bg-white border border-gray-300 text-gray-600 hover:bg-green-50 hover:text-green-700 hover:border-green-300 font-medium py-2 px-4 rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center text-sm transform hover:scale-[1.01]" data-i18n="exportExcel">
+            <button id="export-excel-btn" class="mt-2.5 w-full bg-white/10 hover:bg-white/15 border border-white/15 text-gray-200 font-medium py-2.5 px-4 rounded-xl transition-all duration-150 flex items-center justify-center text-sm" data-i18n="exportExcel">
                 Exportar a Excel (.csv)
             </button>
         </div>
@@ -696,19 +777,19 @@
     <!-- MODAL DE HISTORIAL -->
     <div id="historyModal" class="modal-overlay hidden">
         <div class="modal-content p-6 w-full max-w-2xl">
-            <div class="flex justify-between items-center border-b border-gray-300 pb-3 mb-4">
-                <h3 class="text-xl font-bold text-gray-800" data-i18n="historyTitle">Historial de Carreras</h3>
-                <button id="close-history-btn" class="text-gray-500 hover:text-black">X</button>
+            <div class="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
+                <h3 class="text-lg font-bold text-white" data-i18n="historyTitle">Historial de Carreras</h3>
+                <button id="close-history-btn" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-300 font-semibold text-xs">✕</button>
             </div>
             <div class="overflow-y-auto max-h-96">
                 <table class="w-full text-left text-sm">
-                    <thead><tr><th class="p-2 text-gray-700" data-i18n="date">FECHA</th><th class="p-2 text-gray-700" data-i18n="pilotCar">PILOTO/COCHE</th><th class="p-2 text-gray-700" data-i18n="bestLap">MEJOR VUELTA</th><th class="p-2 text-gray-700" data-i18n="avgSpeedSimple">VEL. MEDIA</th></tr></thead>
-                    <tbody id="full-history-body" class="text-gray-800"></tbody>
+                    <thead><tr><th class="p-2" data-i18n="date">FECHA</th><th class="p-2" data-i18n="pilotCar">PILOTO/COCHE</th><th class="p-2" data-i18n="bestLap">MEJOR VUELTA</th><th class="p-2" data-i18n="avgSpeedSimple">VEL. MEDIA</th></tr></thead>
+                    <tbody id="full-history-body" class="text-gray-200"></tbody>
                 </table>
-                <p id="no-history-msg" class="text-center text-gray-500 mt-4 hidden" data-i18n="noHistory">No hay carreras registradas aún.</p>
+                <p id="no-history-msg" class="text-center text-gray-500 my-6 text-sm hidden" data-i18n="noHistory">No hay carreras registradas aún.</p>
             </div>
             <div class="mt-6 flex justify-end">
-                <button id="open-confirm-btn" class="bg-gray-200 border border-gray-400 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded shadow flex items-center text-sm transition-colors" data-i18n="clearHistory">Borrar Historial</button>
+                <button id="open-confirm-btn" class="bg-white/10 border border-white/15 hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/40 text-gray-200 px-4 py-2 rounded-lg font-medium flex items-center text-xs transition-colors shadow-sm" data-i18n="clearHistory">Borrar Historial</button>
             </div>
         </div>
     </div>
@@ -716,11 +797,11 @@
     <!-- MODAL DE CONFIRMACIÓN BORRADO -->
     <div id="confirmModal" class="modal-overlay hidden" style="z-index: 200;">
         <div class="modal-content p-6 w-full max-w-sm text-center">
-            <h3 class="text-lg font-bold text-gray-800" data-i18n="clearHistoryQ">¿Borrar Historial?</h3>
-            <p class="text-gray-600 text-sm mt-2 mb-4" data-i18n="cannotUndo">Esta acción no se puede deshacer.</p>
-            <div class="flex justify-center space-x-3">
-                <button id="cancel-clear-btn" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded font-medium border border-gray-400" data-i18n="cancel">Cancelar</button>
-                <button id="confirm-clear-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold shadow-md" data-i18n="yesClear">Sí, Borrar</button>
+            <h3 class="text-base font-bold text-white" data-i18n="clearHistoryQ">¿Borrar Historial?</h3>
+            <p class="text-gray-400 text-xs mt-1.5 mb-5" data-i18n="cannotUndo">Esta acción no se puede deshacer.</p>
+            <div class="flex justify-center space-x-2.5">
+                <button id="cancel-clear-btn" class="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-gray-200 rounded-lg text-xs font-semibold transition" data-i18n="cancel">Cancelar</button>
+                <button id="confirm-clear-btn" class="flex-1 px-4 py-2 bg-[#ff453a] hover:bg-[#e0382d] text-white rounded-lg text-xs font-semibold shadow-sm transition" data-i18n="yesClear">Sí, Borrar</button>
             </div>
         </div>
     </div>
@@ -1583,7 +1664,7 @@
                 const tbody = document.getElementById('lap-history-body'); tbody.innerHTML = '';
                 lapHistory.forEach(l => {
                     const row = document.createElement('tr');
-                    if(l.time === bestLapTime) row.className = "bg-green-100 font-bold";
+                    if(l.time === bestLapTime) row.className = "bg-green-500/20 font-bold text-[#30d158]";
                     row.innerHTML = `<td class="py-2 px-4">${l.lap}</td><td class="py-2 px-4">${(l.time/1000).toFixed(3)}</td><td class="py-2 px-4">${l.speed.toFixed(1)}</td>`;
                     tbody.appendChild(row);
                 });
@@ -1704,9 +1785,9 @@
                 const normalizedH = range===0 ? h : (gh * (1 - (t-min)/range)*0.8 + gh*0.2);
                 const x = pad + i * (barW + 5); const y = 200 - pad - normalizedH;
                 
-                graphCtx.fillStyle = (t===bestLapTime) ? '#059669' : '#6b7280';
+                graphCtx.fillStyle = (t===bestLapTime) ? '#d1d1d6' : '#58585e';
                 graphCtx.fillRect(x, y, barW, normalizedH);
-                graphCtx.fillStyle = '#374151'; graphCtx.font='10px Arial'; graphCtx.textAlign='center';
+                graphCtx.fillStyle = '#98989d'; graphCtx.font='10px -apple-system, sans-serif'; graphCtx.textAlign='center';
                 graphCtx.fillText(i+1, x+barW/2, 195);
             });
         }
@@ -1737,7 +1818,7 @@
                 noHistoryMsg.classList.add('hidden');
                 h.forEach(r => {
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `<td class="p-2 text-xs">${r.date}</td><td class="p-2 font-bold">${r.pilot}<br><span class="text-xs font-normal">${r.car}</span></td><td class="p-2 text-green-700">${r.bestLap}</td><td class="p-2">${r.avgSpeed}</td>`;
+                    tr.innerHTML = `<td class="p-2 text-xs text-gray-400">${r.date}</td><td class="p-2 font-bold text-white">${r.pilot}<br><span class="text-xs font-normal text-gray-400">${r.car}</span></td><td class="p-2 text-[#30d158] font-mono">${r.bestLap}</td><td class="p-2 font-mono">${r.avgSpeed}</td>`;
                     fullHistoryBody.appendChild(tr);
                 });
             }
@@ -1808,7 +1889,7 @@
                 cameraStream = s; videoElement.srcObject = s;
                 videoElement.play(); movableRectangle.style.display='block';
                 isProcessing=true; processVideo(); calibrateBtn.disabled=false;
-                videoStatus.textContent=translations[currentLang].camActive; videoStatus.className="text-center text-sm mt-2 text-green-600 font-bold";
+                videoStatus.textContent=translations[currentLang].camActive; videoStatus.className="text-center text-xs mt-2.5 text-green-600 font-bold";
                 cameraOnBtn.disabled=true; cameraOffBtn.disabled=false;
             } catch(e) { videoStatus.textContent=translations[currentLang].camError; }
         });
@@ -1850,8 +1931,9 @@
                 if (requestFullScreen) {
                     requestFullScreen.call(docEl);
                 } else {
-                    // Fallback simple para móviles que no soportan la API
-                    alert("Tu navegador no soporta el modo pantalla completa. Usa 'Añadir a pantalla de inicio'.");
+                    cameraErrorText.textContent = "Tu navegador no soporta el modo pantalla completa. Usa 'Añadir a pantalla de inicio'.";
+                    cameraErrorAlert.classList.remove('hidden');
+                    setTimeout(() => cameraErrorAlert.classList.add('hidden'), 4000);
                 }
             } else {
                 if (cancelFullScreen) {
