@@ -1295,7 +1295,6 @@
             const h = Math.max(1, Math.min(vh - t, Math.ceil(((heightPct / 100) * ch) / scale)));
             
             const canvas = document.getElementById('video-canvas');
-            // Muestreo en rejilla rápida de alta precisión (32x32) para analizar todos los colores sin lag
             const sampleW = 32;
             const sampleH = 32;
             canvas.width = sampleW; canvas.height = sampleH; 
@@ -1306,7 +1305,6 @@
                 const data = ctx.getImageData(0, 0, sampleW, sampleH).data;
                 let sumR = 0, sumG = 0, sumB = 0, sumLum = 0;
                 let count = 0;
-                let maxPatchDelta = 0;
 
                 for (let i = 0; i < data.length; i += 4) {
                     const r = data[i];
@@ -1319,17 +1317,6 @@
                     sumB += b;
                     sumLum += lum;
                     count++;
-
-                    // Si ya tenemos fondo aprendido, medir la desviación cromática localizada
-                    if (baseColor) {
-                        const dR = Math.abs(r - baseColor.r);
-                        const dG = Math.abs(g - baseColor.g);
-                        const dB = Math.abs(b - baseColor.b);
-                        const pixelColorDelta = Math.max(dR, dG, dB, (dR + dG + dB) / 2.2);
-                        if (pixelColorDelta > maxPatchDelta) {
-                            maxPatchDelta = pixelColorDelta;
-                        }
-                    }
                 }
 
                 if (count === 0) return null;
@@ -1344,10 +1331,8 @@
                     const dG = Math.abs(avgG - baseColor.g);
                     const dB = Math.abs(avgB - baseColor.b);
                     const dLum = Math.abs(avgLum - baseColor.lum);
-                    // Distancia vectorial RGB + canal dominante + impacto local para detectar cualquier color (rojo, azul, amarillo, negro, blanco, verde...)
-                    const euclideanRGB = Math.sqrt(dR * dR + dG * dG + dB * dB) * 0.85;
-                    const dominantChannel = Math.max(dR, dG, dB, dLum);
-                    colorDelta = Math.max(euclideanRGB, dominantChannel, maxPatchDelta * 0.45);
+                    // Diferencia pura respecto al fondo de la pista (en reposo es 0, detecta cualquier color al pasar)
+                    colorDelta = Math.max(dLum, dR, dG, dB, (dR + dG + dB) / 2.2);
                 }
 
                 return {
@@ -1385,114 +1370,104 @@
                 baseBrightness = metrics.lum;
             }
 
-            const diff = metrics.delta;
-            // Umbral inteligente combinado con el piso de ruido aprendido
-            const effectiveThreshold = Math.max(sensitivity, noiseFloor * 1.45);
-            const crossed = diff > effectiveThreshold;
+            // Si estamos calibrando, no disparar detecciones ni TEST OK
+            if (isCalibrating) {
+                movableRectangle.classList.remove('roi-detected');
+                testMsg.style.display = 'none';
+                requestAnimationFrame(processVideo);
+                return;
+            }
 
-            detectionValIndicator.textContent = `Δ Color: ${diff.toFixed(0)} / ${effectiveThreshold.toFixed(0)}`;
+            const diff = metrics.delta;
+            const crossed = diff > sensitivity;
+
+            detectionValIndicator.textContent = `Val: ${diff.toFixed(0)} / ${sensitivity}`;
 
             // Visual Logic: Detección Inmediata + Auto-Aprendizaje de Errores
             if (crossed) {
                 movableRectangle.classList.add('roi-detected');
                 stuckFrameCount++;
 
-                // SISTEMA DE AUTO-APRENDIZAJE DE ERRORES:
-                // Si el sensor lleva más de ~45 frames (~0.75s) detectando cambio continuo, no es un coche rápido:
-                // es una sombra, cambio de luz o posición nueva. La IA aprende el nuevo color de fondo sola.
-                if (!isCalibrating && stuckFrameCount > 45) {
-                    baseColor.r = (baseColor.r * 0.65) + (metrics.r * 0.35);
-                    baseColor.g = (baseColor.g * 0.65) + (metrics.g * 0.35);
-                    baseColor.b = (baseColor.b * 0.65) + (metrics.b * 0.35);
-                    baseColor.lum = (baseColor.lum * 0.65) + (metrics.lum * 0.35);
-                    baseBrightness = baseColor.lum;
-
-                    // Si hay fluctuaciones constantes de cámara, sube ligeramente la tolerancia de ruido
-                    if (stuckFrameCount === 60 && sensitivity < 95) {
-                        noiseFloor = Math.min(sensitivity + 3, diff * 0.85);
-                    }
-                    if (stuckFrameCount > 75) {
-                        stuckFrameCount = 0;
-                    }
+                // SISTEMA DE AUTO-APRENDIZAJE:
+                // Si el sensor se queda activado más de ~20 frames (~0.35s) porque cambió la luz o se movió la cámara,
+                // asimila inmediatamente el nuevo fondo y vuelve a 0 para no quedarse en TEST OK fijo.
+                if (!isCountdown && stuckFrameCount > 20) {
+                    baseColor = { r: metrics.r, g: metrics.g, b: metrics.b, lum: metrics.lum };
+                    baseBrightness = metrics.lum;
+                    stuckFrameCount = 0;
                 }
             } else {
                 movableRectangle.classList.remove('roi-detected');
                 stuckFrameCount = 0;
 
-                // Adaptación continua multicapa a los colores de la pista y aprendizaje del ruido ambiental
-                if (!isCalibrating && !isLineBlocked) { 
-                    baseColor.r = (baseColor.r * 0.94) + (metrics.r * 0.06);
-                    baseColor.g = (baseColor.g * 0.94) + (metrics.g * 0.06);
-                    baseColor.b = (baseColor.b * 0.94) + (metrics.b * 0.06);
-                    baseColor.lum = (baseColor.lum * 0.94) + (metrics.lum * 0.06);
+                // Adaptación continua suave a la luz de la pista cuando no pasa ningún coche
+                if (!isLineBlocked) { 
+                    baseColor.r = (baseColor.r * 0.92) + (metrics.r * 0.08);
+                    baseColor.g = (baseColor.g * 0.92) + (metrics.g * 0.08);
+                    baseColor.b = (baseColor.b * 0.92) + (metrics.b * 0.08);
+                    baseColor.lum = (baseColor.lum * 0.92) + (metrics.lum * 0.08);
                     baseBrightness = baseColor.lum;
-                    noiseFloor = (noiseFloor * 0.97) + (diff * 0.03);
                 }
             }
 
-            if (!isCalibrating) {
-                // TEST MODE
-                if (!isRaceActive && !isCountdown) {
-                    testMsg.style.display = crossed ? 'block' : 'none';
-                    testMsg.textContent = translations[currentLang].testOk;
-                }
-                
-                // SALIDA NULA
-                if (isCountdown && crossed && !raceAborted) {
-                    handleFalseStart();
-                }
+            // TEST MODE
+            if (!isRaceActive && !isCountdown) {
+                testMsg.style.display = crossed ? 'block' : 'none';
+                testMsg.textContent = translations[currentLang].testOk;
+            }
+            
+            // SALIDA NULA (Requiere 2 frames seguidos por encima del umbral para evitar falsos picos de cámara)
+            if (isCountdown && crossed && stuckFrameCount >= 2 && !raceAborted) {
+                handleFalseStart();
+            }
 
-                // CARRERA ACTIVA
-                if (isRaceActive) {
-                    const now = Date.now();
-                    
-                    if (isLineBlocked) {
-                        // --- ESTADO BLOQUEADO (GRIS) ---
-                        // Estamos dentro del tiempo de seguridad
-                        if (now - lastRecordTime < blindTimeMs) {
-                            movableRectangle.classList.add('roi-locked');
-                            movableRectangle.classList.remove('roi-detected');
-                            testMsg.style.display = "block";
-                            testMsg.textContent = translations[currentLang].testWait;
-                        } else {
-                            // --- ESTADO LIMPIEZA CON AUTO-CORRECCIÓN ---
-                            // El tiempo ha pasado, pero... ¿está limpio el sensor?
-                            if (crossed) {
-                                // NO está limpio. MANTENER BLOQUEO para evitar rebote falso
-                                // y aprender progresivamente el nuevo color para desbloquearse solo sin quedarse pillado.
-                                movableRectangle.classList.add('roi-locked');
-                                baseColor.r = (baseColor.r * 0.85) + (metrics.r * 0.15);
-                                baseColor.g = (baseColor.g * 0.85) + (metrics.g * 0.15);
-                                baseColor.b = (baseColor.b * 0.85) + (metrics.b * 0.15);
-                                baseColor.lum = (baseColor.lum * 0.85) + (metrics.lum * 0.15);
-                                baseBrightness = baseColor.lum;
-                            } else {
-                                // SÍ está limpio. LIBERAR.
-                                movableRectangle.classList.remove('roi-locked');
-                                isLineBlocked = false; 
-                                testMsg.style.display = "none";
-                            }
-                        }
+            // CARRERA ACTIVA
+            if (isRaceActive) {
+                const now = Date.now();
+                
+                if (isLineBlocked) {
+                    // --- ESTADO BLOQUEADO (GRIS) ---
+                    // Estamos dentro del tiempo de seguridad
+                    if (now - lastRecordTime < blindTimeMs) {
+                        movableRectangle.classList.add('roi-locked');
+                        movableRectangle.classList.remove('roi-detected');
+                        testMsg.style.display = "block";
+                        testMsg.textContent = translations[currentLang].testWait;
                     } else {
-                        // --- ESTADO VIGILANCIA ---
-                        // Sensor libre, esperando coche.
+                        // --- ESTADO LIMPIEZA CON AUTO-CORRECCIÓN ---
                         if (crossed) {
-                            // ¡Coche detectado!
-                            if (!hasCrossedStart) {
-                                // Primera vez (Salida real)
-                                hasCrossedStart = true;
-                                lapStartTimestamp = now; 
-                                lastRecordTime = now;    
-                                isLineBlocked = true;
-                                
-                                testMsg.textContent = translations[currentLang].testGo;
-                                testMsg.style.display = "block";
-                                setTimeout(() => { if(isRaceActive) testMsg.style.display = 'none'; }, 1000);
-                                polySynth.triggerAttackRelease(["C5", "G5"], "0.1");
-                            } else {
-                                // Vuelta normal
-                                recordLap(); // Esto pondrá isLineBlocked = true
-                            }
+                            movableRectangle.classList.add('roi-locked');
+                            baseColor.r = (baseColor.r * 0.80) + (metrics.r * 0.20);
+                            baseColor.g = (baseColor.g * 0.80) + (metrics.g * 0.20);
+                            baseColor.b = (baseColor.b * 0.80) + (metrics.b * 0.20);
+                            baseColor.lum = (baseColor.lum * 0.80) + (metrics.lum * 0.20);
+                            baseBrightness = baseColor.lum;
+                        } else {
+                            // SÍ está limpio. LIBERAR.
+                            movableRectangle.classList.remove('roi-locked');
+                            isLineBlocked = false; 
+                            testMsg.style.display = "none";
+                        }
+                    }
+                } else {
+                    // --- ESTADO VIGILANCIA ---
+                    // Sensor libre, esperando coche.
+                    if (crossed) {
+                        // ¡Coche detectado!
+                        if (!hasCrossedStart) {
+                            // Primera vez (Salida real)
+                            hasCrossedStart = true;
+                            lapStartTimestamp = now; 
+                            lastRecordTime = now;    
+                            isLineBlocked = true;
+                            
+                            testMsg.textContent = translations[currentLang].testGo;
+                            testMsg.style.display = "block";
+                            setTimeout(() => { if(isRaceActive) testMsg.style.display = 'none'; }, 1000);
+                            polySynth.triggerAttackRelease(["C5", "G5"], "0.1");
+                        } else {
+                            // Vuelta normal
+                            recordLap(); // Esto pondrá isLineBlocked = true
                         }
                     }
                 }
@@ -1504,13 +1479,16 @@
         async function runAutoCalibration() {
             if (!isProcessing) return;
             isCalibrating = true;
+            isCountdown = false;
+            falseStartAlert.classList.remove('show');
+            testMsg.style.display = 'none';
             calibOverlay.classList.add('active');
             calibrateBtn.disabled = true;
 
             let samples = 0;
             let sumR = 0, sumG = 0, sumB = 0, sumLum = 0;
             let historySamples = [];
-            const frames = 55; 
+            const frames = 50; 
 
             function sample() {
                 const m = getROIColorMetrics();
@@ -1536,19 +1514,20 @@
             baseColor = { r: avgR, g: avgG, b: avgB, lum: avgLum };
             baseBrightness = avgLum;
 
-            // Calcular el ruido cromático máximo real de la cámara sobre la pista vacía
+            // Calcular la variación máxima de la cámara con la pista despejada
             let maxColorNoise = 0;
             historySamples.forEach(s => {
                 const dR = Math.abs(s.r - avgR);
                 const dG = Math.abs(s.g - avgG);
                 const dB = Math.abs(s.b - avgB);
-                const d = Math.max(Math.sqrt(dR*dR + dG*dG + dB*dB), dR, dG, dB);
+                const dLum = Math.abs(s.lum - avgLum);
+                const d = Math.max(dLum, dR, dG, dB);
                 if (d > maxColorNoise) maxColorNoise = d;
             });
 
-            noiseFloor = Math.max(2.5, maxColorNoise);
-            const safeMargin = 12;
-            const newSens = Math.min(85, Math.max(safeMargin, Math.ceil(maxColorNoise * 2.2 + 6)));
+            noiseFloor = Math.max(2, maxColorNoise);
+            const safeMargin = 14;
+            const newSens = Math.min(80, Math.max(safeMargin, Math.ceil(maxColorNoise * 2.5 + 8)));
             
             sensitivity = newSens;
             stuckFrameCount = 0;
@@ -1699,6 +1678,15 @@
             
             const lights = [1,2,3,4,5].map(i => document.getElementById(`light-${i}`));
             lights.forEach(l => l.className = "light");
+
+            // Fijar la referencia actual del fondo justo antes del semáforo para evitar salidas nulas por sombras previas
+            const currentMetrics = getROIColorMetrics();
+            if (currentMetrics) {
+                baseColor = { r: currentMetrics.r, g: currentMetrics.g, b: currentMetrics.b, lum: currentMetrics.lum };
+                baseBrightness = currentMetrics.lum;
+            }
+            stuckFrameCount = 0;
+            testMsg.style.display = 'none';
 
             isCountdown = true; raceAborted = false;
             hasCrossedStart = false; 
