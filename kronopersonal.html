@@ -659,7 +659,7 @@
                     <p class="text-white/90 font-medium text-sm mt-0.5" data-i18n="racePaused">CARRERA PAUSADA</p>
                 </div>
 
-                <div id="movable-rectangle">
+                <div id="movable-rectangle" style="left: 25%; top: 25%; width: 50%; height: 50%;">
                     <div id="detection-val-indicator">Val: 0</div>
                     <div id="test-msg"></div>
                     <div id="handle-tl" class="resize-handle"></div>
@@ -1155,16 +1155,18 @@
         let isPaused = false;
         let pauseStartTime = 0;
 
-        // Detección Inteligente
+        // Detección Inteligente Multicolor + Auto-Aprendizaje
         let baseBrightness = null;
+        let baseColor = null; // Fondo aprendido { r, g, b, lum }
+        let noiseFloor = 3.5; // Nivel de ruido ambiental aprendido automáticamente
         let sensitivity = 20; 
         let blindTimeMs = 3000;
         let isLineBlocked = false; // Flag para debounce
-        let needsClearance = false; // NUEVO: Bandera de "espera a limpiar sensor"
+        let needsClearance = false; // Bandera de "espera a limpiar sensor"
         let lastRecordTime = 0;
         let lapStartTimestamp = 0;
-        let hasCrossedStart = false; // NUEVO: Bandera de cruce inicial
-        let stuckFrameCount = 0; // NUEVO: Contador de seguridad anti-bloqueo
+        let hasCrossedStart = false; // Bandera de cruce inicial
+        let stuckFrameCount = 0; // Contador de seguridad anti-bloqueo
         
         // Carrera
         let raceStartTime = 0;
@@ -1200,7 +1202,11 @@
         let startLeftPct, startTopPct, startWidthPct, startHeightPct;
 
         function getClientCoords(e) { return { x: e.touches ? e.touches[0].clientX : e.clientX, y: e.touches ? e.touches[0].clientY : e.clientY }; }
-        function getRoiPercentage(prop) { const style = movableRectangle.style[prop]; return style ? parseFloat(style.replace('%', '')) : 0; }
+        function getRoiPercentage(prop) {
+            const style = movableRectangle.style[prop];
+            if (style) return parseFloat(style.replace('%', ''));
+            return (prop === 'width' || prop === 'height') ? 50 : 25;
+        }
 
         function startAction(e, type, dir = '') {
             if (movableRectangle.style.display === 'none' || isRaceActive || isCalibrating) return;
@@ -1255,6 +1261,9 @@
                 document.removeEventListener('pointermove', moveAction);
                 document.removeEventListener('pointerup', endAction);
                 document.removeEventListener('pointercancel', endAction);
+                // Al mover o redimensionar el ROI, reaprender la nueva zona inmediatamente
+                baseColor = null;
+                stuckFrameCount = 0;
             }
         }
 
@@ -1262,29 +1271,99 @@
         handleTL.addEventListener('pointerdown', e => startAction(e, 'resize', 'tl'));
         handleBR.addEventListener('pointerdown', e => startAction(e, 'resize', 'br'));
 
-        // --- LÓGICA DE VISIÓN (IA) ---
-        function getROIBrightness() {
+        // --- LÓGICA DE VISIÓN MULTICOLOR Y AUTO-APRENDIZAJE (IA) ---
+        function getROIColorMetrics() {
             const vw = videoElement.videoWidth; const vh = videoElement.videoHeight;
-            if(!vw || !vh) return 0;
-            
-            const l = Math.floor(vw * (getRoiPercentage('left')/100));
-            const t = Math.floor(vh * (getRoiPercentage('top')/100));
-            const w = Math.ceil(vw * (getRoiPercentage('width')/100));
-            const h = Math.ceil(vh * (getRoiPercentage('height')/100));
+            if (!vw || !vh) return null;
+
+            const cw = videoElement.clientWidth || vw;
+            const ch = videoElement.clientHeight || vh;
+
+            // Compensar el recorte visual de object-fit: cover para leer exactamente lo que está bajo el ROI
+            const scale = Math.max(cw / vw, ch / vh);
+            const offsetX = (vw * scale - cw) / 2;
+            const offsetY = (vh * scale - ch) / 2;
+
+            const leftPct = getRoiPercentage('left');
+            const topPct = getRoiPercentage('top');
+            const widthPct = getRoiPercentage('width');
+            const heightPct = getRoiPercentage('height');
+
+            const l = Math.max(0, Math.floor(((leftPct / 100) * cw + offsetX) / scale));
+            const t = Math.max(0, Math.floor(((topPct / 100) * ch + offsetY) / scale));
+            const w = Math.max(1, Math.min(vw - l, Math.ceil(((widthPct / 100) * cw) / scale)));
+            const h = Math.max(1, Math.min(vh - t, Math.ceil(((heightPct / 100) * ch) / scale)));
             
             const canvas = document.getElementById('video-canvas');
-            canvas.width = vw; canvas.height = vh; 
+            // Muestreo en rejilla rápida de alta precisión (32x32) para analizar todos los colores sin lag
+            const sampleW = 32;
+            const sampleH = 32;
+            canvas.width = sampleW; canvas.height = sampleH; 
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            ctx.drawImage(videoElement, l, t, w, h, 0, 0, w, h); 
+            ctx.drawImage(videoElement, l, t, w, h, 0, 0, sampleW, sampleH); 
             
             try {
-                const data = ctx.getImageData(0, 0, w, h).data;
-                let sum = 0;
-                for (let i = 0; i < data.length; i += 16) {
-                    sum += (data[i] + data[i+1] + data[i+2]); 
+                const data = ctx.getImageData(0, 0, sampleW, sampleH).data;
+                let sumR = 0, sumG = 0, sumB = 0, sumLum = 0;
+                let count = 0;
+                let maxPatchDelta = 0;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i+1];
+                    const b = data[i+2];
+                    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+
+                    sumR += r;
+                    sumG += g;
+                    sumB += b;
+                    sumLum += lum;
+                    count++;
+
+                    // Si ya tenemos fondo aprendido, medir la desviación cromática localizada
+                    if (baseColor) {
+                        const dR = Math.abs(r - baseColor.r);
+                        const dG = Math.abs(g - baseColor.g);
+                        const dB = Math.abs(b - baseColor.b);
+                        const pixelColorDelta = Math.max(dR, dG, dB, (dR + dG + dB) / 2.2);
+                        if (pixelColorDelta > maxPatchDelta) {
+                            maxPatchDelta = pixelColorDelta;
+                        }
+                    }
                 }
-                return (sum / 3) / (data.length / 16);
-            } catch(e) { return 0; }
+
+                if (count === 0) return null;
+                const avgR = sumR / count;
+                const avgG = sumG / count;
+                const avgB = sumB / count;
+                const avgLum = sumLum / count;
+
+                let colorDelta = 0;
+                if (baseColor) {
+                    const dR = Math.abs(avgR - baseColor.r);
+                    const dG = Math.abs(avgG - baseColor.g);
+                    const dB = Math.abs(avgB - baseColor.b);
+                    const dLum = Math.abs(avgLum - baseColor.lum);
+                    // Distancia vectorial RGB + canal dominante + impacto local para detectar cualquier color (rojo, azul, amarillo, negro, blanco, verde...)
+                    const euclideanRGB = Math.sqrt(dR * dR + dG * dG + dB * dB) * 0.85;
+                    const dominantChannel = Math.max(dR, dG, dB, dLum);
+                    colorDelta = Math.max(euclideanRGB, dominantChannel, maxPatchDelta * 0.45);
+                }
+
+                return {
+                    r: avgR,
+                    g: avgG,
+                    b: avgB,
+                    lum: avgLum,
+                    delta: colorDelta
+                };
+            } catch(e) { return null; }
+        }
+
+        // Mantener compatibilidad con funciones que consulten brillo directo
+        function getROIBrightness() {
+            const metrics = getROIColorMetrics();
+            return metrics ? metrics.lum : null;
         }
 
         function processVideo() {
@@ -1295,23 +1374,59 @@
                 return;
             }
 
-            const currentBri = getROIBrightness();
+            const metrics = getROIColorMetrics();
+            if (metrics === null) {
+                requestAnimationFrame(processVideo);
+                return;
+            }
             
-            detectionValIndicator.textContent = `Brillo: ${currentBri.toFixed(0)}`;
-            
-            if (baseBrightness === null) baseBrightness = currentBri;
-            
-            const diff = Math.abs(currentBri - baseBrightness);
-            const crossed = diff > sensitivity;
+            if (baseColor === null) {
+                baseColor = { r: metrics.r, g: metrics.g, b: metrics.b, lum: metrics.lum };
+                baseBrightness = metrics.lum;
+            }
 
-            // Visual Logic: Detección Inmediata
+            const diff = metrics.delta;
+            // Umbral inteligente combinado con el piso de ruido aprendido
+            const effectiveThreshold = Math.max(sensitivity, noiseFloor * 1.45);
+            const crossed = diff > effectiveThreshold;
+
+            detectionValIndicator.textContent = `Δ Color: ${diff.toFixed(0)} / ${effectiveThreshold.toFixed(0)}`;
+
+            // Visual Logic: Detección Inmediata + Auto-Aprendizaje de Errores
             if (crossed) {
                 movableRectangle.classList.add('roi-detected');
+                stuckFrameCount++;
+
+                // SISTEMA DE AUTO-APRENDIZAJE DE ERRORES:
+                // Si el sensor lleva más de ~45 frames (~0.75s) detectando cambio continuo, no es un coche rápido:
+                // es una sombra, cambio de luz o posición nueva. La IA aprende el nuevo color de fondo sola.
+                if (!isCalibrating && stuckFrameCount > 45) {
+                    baseColor.r = (baseColor.r * 0.65) + (metrics.r * 0.35);
+                    baseColor.g = (baseColor.g * 0.65) + (metrics.g * 0.35);
+                    baseColor.b = (baseColor.b * 0.65) + (metrics.b * 0.35);
+                    baseColor.lum = (baseColor.lum * 0.65) + (metrics.lum * 0.35);
+                    baseBrightness = baseColor.lum;
+
+                    // Si hay fluctuaciones constantes de cámara, sube ligeramente la tolerancia de ruido
+                    if (stuckFrameCount === 60 && sensitivity < 95) {
+                        noiseFloor = Math.min(sensitivity + 3, diff * 0.85);
+                    }
+                    if (stuckFrameCount > 75) {
+                        stuckFrameCount = 0;
+                    }
+                }
             } else {
                 movableRectangle.classList.remove('roi-detected');
-                // Adaptación continua si no está bloqueado
+                stuckFrameCount = 0;
+
+                // Adaptación continua multicapa a los colores de la pista y aprendizaje del ruido ambiental
                 if (!isCalibrating && !isLineBlocked) { 
-                    baseBrightness = (baseBrightness * 0.95) + (currentBri * 0.05);
+                    baseColor.r = (baseColor.r * 0.94) + (metrics.r * 0.06);
+                    baseColor.g = (baseColor.g * 0.94) + (metrics.g * 0.06);
+                    baseColor.b = (baseColor.b * 0.94) + (metrics.b * 0.06);
+                    baseColor.lum = (baseColor.lum * 0.94) + (metrics.lum * 0.06);
+                    baseBrightness = baseColor.lum;
+                    noiseFloor = (noiseFloor * 0.97) + (diff * 0.03);
                 }
             }
 
@@ -1340,13 +1455,17 @@
                             testMsg.style.display = "block";
                             testMsg.textContent = translations[currentLang].testWait;
                         } else {
-                            // --- ESTADO LIMPIEZA ---
+                            // --- ESTADO LIMPIEZA CON AUTO-CORRECCIÓN ---
                             // El tiempo ha pasado, pero... ¿está limpio el sensor?
                             if (crossed) {
-                                // NO está limpio. MANTENER BLOQUEO para evitar rebote falso.
-                                // Forzar adaptación rápida para "acostumbrarse" a la nueva luz/obstáculo.
+                                // NO está limpio. MANTENER BLOQUEO para evitar rebote falso
+                                // y aprender progresivamente el nuevo color para desbloquearse solo sin quedarse pillado.
                                 movableRectangle.classList.add('roi-locked');
-                                baseBrightness = (baseBrightness * 0.9) + (currentBri * 0.1);
+                                baseColor.r = (baseColor.r * 0.85) + (metrics.r * 0.15);
+                                baseColor.g = (baseColor.g * 0.85) + (metrics.g * 0.15);
+                                baseColor.b = (baseColor.b * 0.85) + (metrics.b * 0.15);
+                                baseColor.lum = (baseColor.lum * 0.85) + (metrics.lum * 0.15);
+                                baseBrightness = baseColor.lum;
                             } else {
                                 // SÍ está limpio. LIBERAR.
                                 movableRectangle.classList.remove('roi-locked');
@@ -1381,7 +1500,7 @@
             requestAnimationFrame(processVideo);
         }
 
-        // --- CALIBRACIÓN AUTO ---
+        // --- CALIBRACIÓN AUTO MULTICOLOR ---
         async function runAutoCalibration() {
             if (!isProcessing) return;
             isCalibrating = true;
@@ -1389,33 +1508,50 @@
             calibrateBtn.disabled = true;
 
             let samples = 0;
-            let sum = 0;
-            let min = 255, max = 0;
-            const frames = 60; 
+            let sumR = 0, sumG = 0, sumB = 0, sumLum = 0;
+            let historySamples = [];
+            const frames = 55; 
 
             function sample() {
-                const b = getROIBrightness();
-                sum += b;
-                if(b < min) min = b;
-                if(b > max) max = b;
-                samples++;
+                const m = getROIColorMetrics();
+                if (m) {
+                    sumR += m.r;
+                    sumG += m.g;
+                    sumB += m.b;
+                    sumLum += m.lum;
+                    historySamples.push(m);
+                    samples++;
+                }
                 
                 if (samples < frames) {
                     requestAnimationFrame(sample);
                 } else {
-                    finishCalib(sum/frames, min, max);
+                    finishCalib(sumR / frames, sumG / frames, sumB / frames, sumLum / frames, historySamples);
                 }
             }
             sample();
         }
 
-        function finishCalib(avg, min, max) {
-            baseBrightness = avg;
-            const noise = Math.max(max - avg, avg - min);
-            const safeMargin = 15;
-            const newSens = Math.max(safeMargin, Math.ceil(noise * 1.5));
+        function finishCalib(avgR, avgG, avgB, avgLum, historySamples) {
+            baseColor = { r: avgR, g: avgG, b: avgB, lum: avgLum };
+            baseBrightness = avgLum;
+
+            // Calcular el ruido cromático máximo real de la cámara sobre la pista vacía
+            let maxColorNoise = 0;
+            historySamples.forEach(s => {
+                const dR = Math.abs(s.r - avgR);
+                const dG = Math.abs(s.g - avgG);
+                const dB = Math.abs(s.b - avgB);
+                const d = Math.max(Math.sqrt(dR*dR + dG*dG + dB*dB), dR, dG, dB);
+                if (d > maxColorNoise) maxColorNoise = d;
+            });
+
+            noiseFloor = Math.max(2.5, maxColorNoise);
+            const safeMargin = 12;
+            const newSens = Math.min(85, Math.max(safeMargin, Math.ceil(maxColorNoise * 2.2 + 6)));
             
             sensitivity = newSens;
+            stuckFrameCount = 0;
             thresholdSlider.value = newSens;
             currentThresholdDisplay.textContent = newSens;
             
@@ -1887,7 +2023,11 @@
             try {
                 const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
                 cameraStream = s; videoElement.srcObject = s;
-                videoElement.play(); movableRectangle.style.display='block';
+                baseBrightness = null;
+                baseColor = null;
+                stuckFrameCount = 0;
+                await videoElement.play();
+                movableRectangle.style.display='block';
                 isProcessing=true; processVideo(); calibrateBtn.disabled=false;
                 videoStatus.textContent=translations[currentLang].camActive; videoStatus.className="text-center text-xs mt-2.5 text-green-600 font-bold";
                 cameraOnBtn.disabled=true; cameraOffBtn.disabled=false;
