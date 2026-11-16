@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KronoPersonal - Acceso Oficial</title>
+    <title>KronoPersonal LITE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -259,8 +259,8 @@
         
         function updateMailLink() {
             const userEmail = emailInput.value || "[tu correo]";
-            const subject = "Interés Licencia KronoPersonal Plata";
-            const body = `Hola, equipo de SLOTCARHOME,%0D%0A%0D%0AEstoy interesado en adquirir la licencia de KronoPersonal por el Precio de 5 Euros%0D%0A%0D%0AQuedo a la espera de sus instrucciones para proceder con el pago.%0D%0A%0D%0AGracias y un saludo.`;
+            const subject = "Interés Licencia KronoPersonal LITE";
+            const body = `Hola, equipo de SLOTCARHOME,%0D%0A%0D%0AEstoy interesado en adquirir la licencia de KronoPersonal LITE por el Precio de 5 Euros%0D%0A%0D%0AQuedo a la espera de sus instrucciones para proceder con el pago.%0D%0A%0D%0AGracias y un saludo.`;
             mailLink.href = `mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`;
         }
         emailInput.addEventListener('input', updateMailLink);
