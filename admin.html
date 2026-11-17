@@ -54,81 +54,185 @@
     </div>
 
     <!-- 2. PANEL PRINCIPAL -->
-    <div id="main-panel" class="hidden max-w-md mx-auto space-y-6">
+    <div id="main-panel" class="hidden max-w-4xl mx-auto space-y-6 pb-10">
         
         <!-- CABECERA -->
         <header class="text-center py-4">
             <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-200 to-slate-400 uppercase">KRONO MANAGER</h1>
-            <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Gestión de Licencias Silver (5€)</p>
+            <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Gestión y Telemetría en Tiempo Real</p>
         </header>
 
-        <!-- CONTADOR DE INTERESADOS -->
-        <div class="glass p-4 rounded-xl border-l-4 border-slate-400 flex items-center justify-between">
-            <div>
-                <h3 class="text-xs font-bold text-slate-400 uppercase">Clientes Interesados</h3>
-                <p class="text-[10px] text-slate-500">Han pulsado "Solicitar"</p>
-            </div>
-            <div class="text-right">
-                <span id="clicks-counter" class="text-3xl font-black text-white">--</span>
-                <i class="fas fa-users text-slate-600 ml-2"></i>
-            </div>
-        </div>
-
-        <!-- FASE 1: PEDIR PAGO -->
-        <div class="glass rounded-xl p-5 border border-slate-600/30 relative">
-            <div class="absolute top-0 right-0 bg-slate-600 text-white text-[10px] font-bold px-2 py-1 rounded-bl">PASO 1</div>
-            <h2 class="text-sm font-bold text-slate-300 mb-3"><i class="fas fa-comment-dollar mr-2"></i>Enviar Instrucciones (5€)</h2>
-            
-            <input type="email" id="client-email-1" class="w-full input-dark rounded p-2 text-sm mb-3" placeholder="Correo del interesado...">
-            
-            <button onclick="sendPaymentRequest()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded text-sm flex justify-center gap-2 border border-slate-500">
-                <i class="fas fa-paper-plane text-slate-300"></i> ENVIAR DATOS PAGO
+        <!-- NAVEGACIÓN POR PESTAÑAS -->
+        <div class="flex gap-2 p-1 glass rounded-xl max-w-md mx-auto border border-slate-700">
+            <button onclick="switchTab('tab-live')" id="btn-tab-live" class="flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white shadow transition flex items-center justify-center gap-2">
+                <i class="fas fa-satellite-dish animate-pulse"></i> MONITOR EN VIVO
+            </button>
+            <button onclick="switchTab('tab-manage')" id="btn-tab-manage" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-2">
+                <i class="fas fa-key"></i> LICENCIAS (<span id="total-licenses-badge">0</span>)
             </button>
         </div>
 
-        <!-- FASE 2: ENTREGAR LICENCIA -->
-        <div class="glass rounded-xl p-5 border border-emerald-600/30 relative">
-            <div class="absolute top-0 right-0 bg-emerald-600 text-[10px] font-bold px-2 py-1 rounded-bl">PASO 2</div>
-            <h2 class="text-sm font-bold text-emerald-400 mb-3"><i class="fas fa-gift mr-2"></i>Generar y Entregar</h2>
+        <!-- ========================================== -->
+        <!-- PESTAÑA 1: MONITOR EN VIVO (DASHBOARD)     -->
+        <!-- ========================================== -->
+        <div id="tab-live" class="space-y-6">
             
-            <div class="space-y-3">
-                <input type="hidden" id="app-id" value="app_krono"> <!-- ID FIJO SILVER -->
-                
-                <div>
-                    <label class="text-[10px] text-gray-400 font-bold uppercase">Correo Cliente (Pagado)</label>
-                    <input type="email" id="client-email-2" class="w-full input-dark rounded p-2 text-sm focus:border-emerald-500 font-mono">
-                </div>
-                
-                <button onclick="generateAndSave()" id="btn-save" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded shadow-lg text-sm mt-2">
-                    <i class="fas fa-cogs mr-1"></i> GUARDAR Y PREPARAR ENTREGA
-                </button>
-                
-                <!-- ZONA DE ENTREGA (OCULTA) -->
-                <div id="delivery-section" class="hidden pt-4 mt-2 border-t border-slate-700/50">
-                    <div class="bg-slate-900 p-2 rounded mb-3 text-center border border-slate-700">
-                        <p class="text-[10px] text-slate-400">CLAVE GENERADA:</p>
-                        <p id="display-code" class="text-xl font-mono text-slate-200 font-bold tracking-widest select-all">---</p>
+            <!-- MÉTRICAS GLOBALES -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="glass p-4 rounded-xl border-l-4 border-emerald-500 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase">Jugando Ahora</h3>
+                        <p class="text-[9px] text-emerald-400">En línea</p>
                     </div>
+                    <span id="stat-online" class="text-3xl font-black text-emerald-400">0</span>
+                </div>
 
-                    <a id="btn-send-delivery" href="#" target="_blank" class="block w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded text-center shadow-lg border border-blue-400 text-sm">
-                        <i class="fas fa-envelope-open-text mr-2"></i> ABRIR CORREO Y ENVIAR
-                    </a>
-                    <p id="status" class="text-center text-xs text-emerald-400 mt-2 font-bold"></p>
+                <div class="glass p-4 rounded-xl border-l-4 border-blue-500 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase">Tiempo Total</h3>
+                        <p class="text-[9px] text-slate-500">Acumulado</p>
+                    </div>
+                    <span id="stat-playtime" class="text-xl font-black text-white">0h 0m</span>
+                </div>
+
+                <div class="glass p-4 rounded-xl border-l-4 border-purple-500 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase">Países</h3>
+                        <p class="text-[9px] text-slate-500">Conectados</p>
+                    </div>
+                    <span id="stat-countries" class="text-2xl font-black text-white">0</span>
+                </div>
+
+                <div class="glass p-4 rounded-xl border-l-4 border-slate-400 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase">Interesados</h3>
+                        <p class="text-[9px] text-slate-500">Clicks compra</p>
+                    </div>
+                    <span id="clicks-counter" class="text-2xl font-black text-slate-300">--</span>
                 </div>
             </div>
+
+            <!-- RADAR DE JUGADORES EN VIVO -->
+            <div class="glass p-5 rounded-xl border border-emerald-500/30 relative overflow-hidden">
+                <div class="flex flex-wrap justify-between items-center mb-4 gap-2 border-b border-slate-700/80 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider">Pista en Vivo (Telemetría Real)</h2>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="toggleEmailAlerts()" id="btn-email-alerts" class="text-[10px] bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-500/40 transition flex items-center gap-1.5 font-bold" title="Envia un aviso automático a slotcarhome@gmail.com cuando alguien entra a jugar">
+                            <i class="fas fa-bell"></i> Aviso a Gmail: ON
+                        </button>
+                        <button onclick="sendTestEmailAlert()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-600 transition flex items-center gap-1" title="Enviar correo de prueba a slotcarhome@gmail.com">
+                            <i class="fas fa-paper-plane text-blue-400"></i> Probar Correo
+                        </button>
+                        <button onclick="document.getElementById('telemetry-modal').classList.remove('hidden')" class="text-[10px] bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-3 py-1.5 rounded-lg border border-blue-500/40 transition flex items-center gap-1.5 font-bold">
+                            <i class="fas fa-code"></i> Cómo activar en la App
+                        </button>
+                        <button onclick="toggleSimulation()" id="btn-sim" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-600 transition flex items-center gap-1.5">
+                            <i class="fas fa-vial text-amber-400"></i> Simular Pilotos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Barra informativa del correo destino -->
+                <div class="bg-slate-950/60 border border-slate-800 rounded-lg px-3 py-2 mb-4 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                    <div class="flex items-center gap-2 text-slate-300">
+                        <i class="fas fa-envelope text-emerald-400"></i>
+                        <span>Notificaciones automáticas dirigidas a: <strong class="text-white font-mono">slotcarhome@gmail.com</strong></span>
+                    </div>
+                    <span id="last-email-status" class="text-[10px] text-slate-400">Esperando nuevos pilotos...</span>
+                </div>
+
+                <!-- Grid donde aparecen las tarjetas de los jugadores activos -->
+                <div id="live-players-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+
+            <!-- RANKING DE TIEMPO DE JUEGO Y PAÍSES -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="glass p-4 rounded-xl border border-slate-700">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center gap-2">
+                        <i class="fas fa-trophy text-amber-400"></i> Top Pilotos (Más horas de vuelo)
+                    </h3>
+                    <div id="top-players-list" class="space-y-2 text-xs"></div>
+                </div>
+                <div class="glass p-4 rounded-xl border border-slate-700">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center gap-2">
+                        <i class="fas fa-globe-europe text-blue-400"></i> Distribución por Países
+                    </h3>
+                    <div id="countries-list" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- HISTORIAL -->
+        <!-- ========================================== -->
+        <!-- PESTAÑA 2: GESTIÓN DE LICENCIAS            -->
+        <!-- ========================================== -->
+        <div id="tab-manage" class="hidden max-w-md mx-auto space-y-6">
+
+            <!-- FASE 1: PEDIR PAGO -->
+            <div class="glass rounded-xl p-5 border border-slate-600/30 relative">
+                <div class="absolute top-0 right-0 bg-slate-600 text-white text-[10px] font-bold px-2 py-1 rounded-bl">PASO 1</div>
+                <h2 class="text-sm font-bold text-slate-300 mb-3"><i class="fas fa-comment-dollar mr-2"></i>Enviar Instrucciones (5€)</h2>
+                
+                <input type="email" id="client-email-1" class="w-full input-dark rounded p-2 text-sm mb-3" placeholder="Correo del interesado...">
+                
+                <button onclick="sendPaymentRequest()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded text-sm flex justify-center gap-2 border border-slate-500">
+                    <i class="fas fa-paper-plane text-slate-300"></i> ENVIAR DATOS PAGO
+                </button>
+            </div>
+
+            <!-- FASE 2: ENTREGAR LICENCIA -->
+            <div class="glass rounded-xl p-5 border border-emerald-600/30 relative">
+                <div class="absolute top-0 right-0 bg-emerald-600 text-[10px] font-bold px-2 py-1 rounded-bl">PASO 2</div>
+                <h2 class="text-sm font-bold text-emerald-400 mb-3"><i class="fas fa-gift mr-2"></i>Generar y Entregar</h2>
+                
+                <div class="space-y-3">
+                    <input type="hidden" id="app-id" value="app_krono">
+                    
+                    <div>
+                        <label class="text-[10px] text-gray-400 font-bold uppercase">Correo Cliente (Pagado)</label>
+                        <input type="email" id="client-email-2" class="w-full input-dark rounded p-2 text-sm focus:border-emerald-500 font-mono">
+                    </div>
+                    
+                    <button onclick="generateAndSave()" id="btn-save" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded shadow-lg text-sm mt-2">
+                        <i class="fas fa-cogs mr-1"></i> GUARDAR Y PREPARAR ENTREGA
+                    </button>
+                    
+                    <!-- ZONA DE ENTREGA (OCULTA) -->
+                    <div id="delivery-section" class="hidden pt-4 mt-2 border-t border-slate-700/50">
+                        <div class="bg-slate-900 p-2 rounded mb-3 text-center border border-slate-700">
+                            <p class="text-[10px] text-slate-400">CLAVE GENERADA:</p>
+                            <p id="display-code" class="text-xl font-mono text-slate-200 font-bold tracking-widest select-all">---</p>
+                        </div>
+
+                        <a id="btn-send-delivery" href="#" target="_blank" class="block w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded text-center shadow-lg border border-blue-400 text-sm">
+                            <i class="fas fa-envelope-open-text mr-2"></i> ABRIR CORREO Y ENVIAR
+                        </a>
+                        <p id="status" class="text-center text-xs text-emerald-400 mt-2 font-bold"></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TABLA GENERAL DE LICENCIAS (SIEMPRE VISIBLE ABAJO) -->
         <div class="glass p-5 rounded-xl border border-slate-700">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xs font-bold text-slate-400 uppercase">Licencias Generadas</h3>
+                <h3 class="text-xs font-bold text-slate-400 uppercase"><i class="fas fa-list mr-1"></i> Registro General de Pilotos</h3>
                 <button onclick="copyAllEmails()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded text-[10px] font-bold border border-slate-500 transition shadow">
                     <i class="fas fa-copy mr-1"></i> Copiar Correos
                 </button>
             </div>
             <div class="overflow-x-auto">
                 <table class="history-table">
-                    <thead><tr><th>EMAIL</th><th>CÓDIGO</th><th>ESTADO</th><th></th></tr></thead>
+                    <thead><tr><th>PILOTO (EMAIL)</th><th>CLAVE</th><th>ESTADO ACTUAL</th><th class="text-center">PAÍS</th><th class="text-center">TIEMPO JUGADO</th><th></th></tr></thead>
                     <tbody id="history-body"></tbody>
                 </table>
             </div>
@@ -136,6 +240,80 @@
         
         <div class="text-center pt-4 pb-6">
              <button onclick="logout()" class="text-slate-500 hover:text-white transition text-xs"><i class="fas fa-power-off mr-1"></i> Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE INSTRUCCIONES DE TELEMETRÍA -->
+    <div id="telemetry-modal" class="hidden fixed inset-0 bg-slate-950/90 z-[100] flex items-center justify-center p-4">
+        <div class="glass p-6 rounded-2xl border border-blue-500/40 w-full max-w-2xl shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-sm font-bold text-blue-400 uppercase flex items-center gap-2">
+                    <i class="fas fa-satellite-dish"></i> ¿Por qué salían todos conectados y cómo medir en tiempo real?
+                </h3>
+                <button onclick="document.getElementById('telemetry-modal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <div class="text-xs text-slate-300 space-y-3 overflow-y-auto pr-2">
+                <p class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 p-3 rounded-lg">
+                    <strong>¡Nuevo! Aviso al correo:</strong> Este código incluye el envío automático de un email a <code class="text-white font-mono">slotcarhome@gmail.com</code> en el mismo instante en que el piloto abre la app, sin que tú tengas que tener este panel abierto.
+                </p>
+                <p>Pega esta función en el archivo <strong>index.html</strong> de tu aplicación justo cuando validas la licencia del usuario (pasándole el <code class="text-emerald-400">docId</code> y el <code class="text-emerald-400">email</code> del piloto):</p>
+                <pre id="telemetry-code" class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-[10px] text-emerald-300 overflow-x-auto select-all">
+// --- PEGAR EN TU APP (index.html) AL VALIDAR LA LICENCIA ---
+async function iniciarTelemetriaEnVivo(licenseDocId, pilotEmail) {
+    const ref = doc(db, 'artifacts', 'app_krono', 'public', 'data', 'access_codes', licenseDocId);
+    
+    // 1. Detectar País automáticamente
+    let countryData = { countryCode: 'ES', country: 'Desconocido' };
+    try {
+        const res = await fetch('https://ipapi.co/json/');
+        const geo = await res.json();
+        if (geo.country_code) {
+            countryData = { countryCode: geo.country_code, country: geo.country_name };
+        }
+    } catch(e) {}
+
+    // 2. Avisar a Firebase de que acaba de entrar
+    await updateDoc(ref, {
+        ...countryData,
+        last_ping: new Date().toISOString(),
+        current_activity: 'En la aplicación'
+    });
+
+    // 3. ENVIAR CORREO AUTOMÁTICO A slotcarhome@gmail.com (Sin bloqueo CORS)
+    if (!sessionStorage.getItem('notified_admin')) {
+        sessionStorage.setItem('notified_admin', 'true');
+        const formData = new FormData();
+        formData.append('_subject', `🏎️ Piloto Conectado: ${pilotEmail} (${countryData.country})`);
+        formData.append('Piloto', pilotEmail);
+        formData.append('Pais', `${countryData.country} (${countryData.countryCode})`);
+        formData.append('Hora_Inicio', new Date().toLocaleString('es-ES'));
+        formData.append('App', 'KronoPersonal SILVER');
+        formData.append('_template', 'table');
+        formData.append('_captcha', 'false');
+
+        fetch('https://formsubmit.co/slotcarhome@gmail.com', {
+            method: 'POST',
+            mode: 'no-cors',
+            body: formData
+        }).catch(() => {});
+    }
+
+    // 4. Latido cada 60 segundos (suma 1 minuto jugado y mantiene el estado "En línea")
+    setInterval(async () => {
+        if (document.visibilityState === 'visible') {
+            await updateDoc(ref, {
+                last_ping: new Date().toISOString(),
+                playtime_minutes: increment(1) // Requiere importar 'increment' de firebase/firestore
+            });
+        }
+    }, 60000);
+}</pre>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                <button onclick="document.getElementById('telemetry-modal').classList.add('hidden')" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition">CERRAR</button>
+            </div>
         </div>
     </div>
 
@@ -148,6 +326,183 @@
         window.showAlert = function(msg) {
             document.getElementById('custom-alert-msg').textContent = msg;
             document.getElementById('custom-alert').classList.remove('hidden');
+        };
+
+        // --- NAVEGACIÓN DE PESTAÑAS ---
+        window.switchTab = function(tabId) {
+            document.getElementById('tab-live').classList.add('hidden');
+            document.getElementById('tab-manage').classList.add('hidden');
+            document.getElementById(tabId).classList.remove('hidden');
+
+            const btnLive = document.getElementById('btn-tab-live');
+            const btnManage = document.getElementById('btn-tab-manage');
+
+            if (tabId === 'tab-live') {
+                btnLive.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white shadow transition flex items-center justify-center gap-2";
+                btnManage.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-2";
+            } else {
+                btnManage.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-slate-700 text-white shadow transition flex items-center justify-center gap-2";
+                btnLive.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition flex items-center justify-center gap-2";
+            }
+        };
+
+        // Convierte código ISO (ej: "ES") en bandera Emoji (🇪🇸)
+        function getFlagEmoji(countryCode) {
+            if (!countryCode || countryCode.length !== 2) return '🌍';
+            const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt());
+            return String.fromCodePoint(...codePoints);
+        }
+
+        function formatPlaytime(minutes) {
+            if (!minutes || minutes <= 0) return '0m';
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            return h > 0 ? `${h}h ${m}m` : `${m}m`;
+        }
+
+        // --- SISTEMA DE ALERTAS POR CORREO A SLOTCARHOME@GMAIL.COM ---
+        const ADMIN_NOTIFY_EMAIL = "slotcarhome@gmail.com";
+        let emailAlertsEnabled = true;
+        const notifiedSessions = new Set(); // Evita mandar correos repetidos por el mismo jugador en la misma sesión
+
+        window.toggleEmailAlerts = function() {
+            emailAlertsEnabled = !emailAlertsEnabled;
+            const btn = document.getElementById('btn-email-alerts');
+            if (emailAlertsEnabled) {
+                btn.className = "text-[10px] bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 px-3 py-1.5 rounded-lg border border-emerald-500/40 transition flex items-center gap-1.5 font-bold";
+                btn.innerHTML = '<i class="fas fa-bell"></i> Aviso a Gmail: ON';
+            } else {
+                btn.className = "text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-400 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5";
+                btn.innerHTML = '<i class="fas fa-bell-slash"></i> Aviso a Gmail: OFF';
+            }
+        };
+
+        async function sendAutomatedEmailToAdmin(playerData, isTest = false) {
+            const statusEl = document.getElementById('last-email-status');
+            if (statusEl) {
+                statusEl.textContent = `Enviando aviso a ${ADMIN_NOTIFY_EMAIL}...`;
+                statusEl.className = "text-[10px] text-amber-400 animate-pulse";
+            }
+
+            const payload = {
+                _subject: isTest 
+                    ? `🔔 Prueba de Aviso - KronoPersonal Admin` 
+                    : `🏎️ Piloto Jugando Ahora: ${playerData.email}`,
+                Piloto: playerData.email,
+                Clave_Licencia: playerData.code || '---',
+                Pais: `${playerData.country || 'Desconocido'} (${playerData.countryCode || '--'})`,
+                Actividad_Actual: playerData.current_activity || 'Acaba de entrar a la App',
+                Tiempo_Total_Acumulado: formatPlaytime(playerData.playtime_minutes),
+                Hora_Deteccion: new Date().toLocaleString('es-ES'),
+                _template: "table",
+                _captcha: "false"
+            };
+
+            const formData = new FormData();
+            Object.entries(payload).forEach(([key, val]) => formData.append(key, val));
+
+            try {
+                // Intento 1: Envío estándar con FormData en modo no-cors (evita bloqueos de sandbox/CORS)
+                await fetch(`https://formsubmit.co/${ADMIN_NOTIFY_EMAIL}`, {
+                    method: "POST",
+                    mode: "no-cors",
+                    body: formData
+                });
+
+                if (statusEl) {
+                    statusEl.textContent = `✅ Aviso enviado a ${ADMIN_NOTIFY_EMAIL} (${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
+                    statusEl.className = "text-[10px] text-emerald-400 font-bold";
+                }
+                if (isTest) {
+                    window.showAlert(`Solicitud de correo enviada a ${ADMIN_NOTIFY_EMAIL}.\n\n📌 NOTA IMPORTANTE: Si aún no has recibido el correo de activación inicial de FormSubmit en tu Gmail (revisa Spam), pulsa también una vez en la opción de activación directa si tu navegador bloquea envíos en segundo plano.`);
+                }
+            } catch (err) {
+                // Respaldo silencioso mediante iframe oculto si el entorno bloquea window.fetch por completo
+                try {
+                    let iframe = document.getElementById('hidden-email-iframe');
+                    if (!iframe) {
+                        iframe = document.createElement('iframe');
+                        iframe.name = 'hidden-email-iframe';
+                        iframe.id = 'hidden-email-iframe';
+                        iframe.style.display = 'none';
+                        document.body.appendChild(iframe);
+                    }
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `https://formsubmit.co/${ADMIN_NOTIFY_EMAIL}`;
+                    form.target = 'hidden-email-iframe';
+
+                    Object.entries(payload).forEach(([key, val]) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = val;
+                        form.appendChild(input);
+                    });
+
+                    document.body.appendChild(form);
+                    form.submit();
+                    document.body.removeChild(form);
+
+                    if (statusEl) {
+                        statusEl.textContent = `✅ Aviso enviado vía formulario a ${ADMIN_NOTIFY_EMAIL} (${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
+                        statusEl.className = "text-[10px] text-emerald-400 font-bold";
+                    }
+                    if (isTest) {
+                        window.showAlert(`Correo de prueba enviado a ${ADMIN_NOTIFY_EMAIL}.\n\nRevisa tu bandeja de entrada o la carpeta de Spam.`);
+                    }
+                } catch (fallbackErr) {
+                    if (statusEl) {
+                        statusEl.textContent = `⚠️ Bloqueado por navegador de previsualización`;
+                        statusEl.className = "text-[10px] text-amber-400";
+                    }
+                }
+            }
+        }
+
+        window.sendTestEmailAlert = function() {
+            sendAutomatedEmailToAdmin({
+                email: "piloto.prueba@slotcarhome.com",
+                code: "TEST-001",
+                country: "España",
+                countryCode: "ES",
+                current_activity: "Prueba de notificación desde Panel Admin",
+                playtime_minutes: 120
+            }, true);
+        };
+
+        // --- SIMULADOR DE DATOS EN VIVO (DEMO) ---
+        let isSimulating = false;
+        let lastRealDocs = [];
+        const mockPlayers = [
+            {
+                id: 'sim1', email: 'carlos.sainz@slotclub.es', code: ' KRN-551', active: true, is_simulated: true,
+                countryCode: 'ES', country: 'España', playtime_minutes: 342,
+                current_activity: 'Carrera Rápida (Vuelta 14/25)', best_lap: '04.128s', track: 'Circuito Cataluña', session_minutes: 28
+            },
+            {
+                id: 'sim2', email: 'checo.perez@racing.mx', code: 'KRN-890', active: true, is_simulated: true,
+                countryCode: 'MX', country: 'México', playtime_minutes: 195,
+                current_activity: 'Entrenamiento Libre', best_lap: '03.981s', track: 'Pista Club Madera', session_minutes: 45
+            },
+            {
+                id: 'sim3', email: 'colapinto.fan@pista.ar', code: 'KRN-102', active: true, is_simulated: true,
+                countryCode: 'AR', country: 'Argentina', playtime_minutes: 85,
+                current_activity: 'Configurando Coche en Box', best_lap: '--.---', track: 'Rally Tramo 2', session_minutes: 12
+            }
+        ];
+
+        window.toggleSimulation = function() {
+            isSimulating = !isSimulating;
+            const btn = document.getElementById('btn-sim');
+            if (isSimulating) {
+                btn.className = "text-[10px] bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-lg border border-amber-500/50 transition flex items-center gap-1.5 font-bold";
+                btn.innerHTML = '<i class="fas fa-stop-circle text-amber-400"></i> Detener Simulación';
+            } else {
+                btn.className = "text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-600 transition flex items-center gap-1.5";
+                btn.innerHTML = '<i class="fas fa-vial text-amber-400"></i> Simular Pilotos de Prueba';
+            }
+            renderDashboardAndTable(lastRealDocs);
         };
 
         // --- FUNCIONES DE BORRADO Y COPIA ---
@@ -249,7 +604,6 @@
         }
         window.logout = function() { location.reload(); }
 
-        // --- STREAMING_CHUNK:Fetching statistics... ---
         // --- ESTADÍSTICAS CORREGIDAS ---
         function initStats() {
             if (!auth.currentUser) {
@@ -273,78 +627,233 @@
             }
         }
 
-        // --- STREAMING_CHUNK:Loading history... ---
-        // --- HISTORIAL DE LICENCIAS ---
+        // --- RENDERIZADO DEL MONITOR EN VIVO Y TABLA ---
+        function renderDashboardAndTable(realDocs) {
+            const allDocs = isSimulating ? [...mockPlayers, ...realDocs] : realDocs;
+            const body = document.getElementById('history-body');
+            const liveGrid = document.getElementById('live-players-grid');
+            const topList = document.getElementById('top-players-list');
+            const countriesList = document.getElementById('countries-list');
+
+            document.getElementById('total-licenses-badge').textContent = realDocs.length;
+
+            // 1. Filtrar quién está conectado REALMENTE ahora mismo
+            // NOTA: Ignoramos 'current_session' antiguo porque la app no lo borraba al salir.
+            // Solo está conectado si envió un 'last_ping' en los últimos 2 minutos (120.000 ms) o si es simulación.
+            const now = Date.now();
+            const activePlayers = allDocs.filter(d => {
+                if (d.is_simulated) return true;
+                if (d.last_ping) {
+                    const diffMs = now - new Date(d.last_ping).getTime();
+                    return diffMs >= 0 && diffMs < 120000; // Activo en los últimos 2 minutos
+                }
+                return false;
+            });
+
+            // 1.B Enviar alerta por correo a slotcarhome@gmail.com si hay un nuevo jugador real en línea
+            if (emailAlertsEnabled) {
+                activePlayers.forEach(player => {
+                    if (!player.is_simulated && !notifiedSessions.has(player.id)) {
+                        notifiedSessions.add(player.id);
+                        sendAutomatedEmailToAdmin(player, false);
+                    }
+                });
+            }
+
+            // 2. Calcular Estadísticas Globales
+            let totalMinutes = 0;
+            const countryMap = {};
+            allDocs.forEach(d => {
+                totalMinutes += Number(d.playtime_minutes || 0);
+                if (d.countryCode) {
+                    const code = d.countryCode.toUpperCase();
+                    countryMap[code] = (countryMap[code] || 0) + 1;
+                }
+            });
+
+            document.getElementById('stat-online').textContent = activePlayers.length;
+            document.getElementById('stat-playtime').textContent = formatPlaytime(totalMinutes);
+            document.getElementById('stat-countries').textContent = Object.keys(countryMap).length;
+
+            // 3. Renderizar Tarjetas de Jugadores en Vivo
+            if (activePlayers.length === 0) {
+                liveGrid.innerHTML = `
+                    <div class="col-span-full py-10 text-center text-slate-500">
+                        <i class="fas fa-flag-checkered text-4xl mb-3 opacity-30"></i>
+                        <p class="text-sm font-bold text-slate-400">Ningún piloto en pista en este momento</p>
+                        <p class="text-[11px] mt-1">Cuando un usuario abra KronoPersonal, verás su actividad en directo aquí.</p>
+                        <button onclick="toggleSimulation()" class="mt-4 text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded border border-slate-700 transition">
+                            <i class="fas fa-eye mr-1"></i> Ver demostración con pilotos simulados
+                        </button>
+                    </div>`;
+            } else {
+                liveGrid.innerHTML = activePlayers.map(p => {
+                    const flag = getFlagEmoji(p.countryCode);
+                    const countryName = p.country || p.countryCode || 'Ubicación desconocida';
+                    const activity = p.current_activity || 'En el menú principal / Preparando carrera';
+                    const bestLap = p.best_lap || '--.---';
+                    const track = p.track || 'Pista Personal';
+                    const sessionMins = p.session_minutes ? `${p.session_minutes} min en esta sesión` : 'Conectado ahora';
+
+                    return `
+                    <div class="bg-slate-900/90 border border-emerald-500/40 rounded-xl p-4 shadow-lg relative overflow-hidden flex flex-col justify-between">
+                        <div class="flex justify-between items-start gap-2 mb-3">
+                            <div class="truncate">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                    <h4 class="font-bold text-xs text-white truncate" title="${p.email}">${p.email}</h4>
+                                </div>
+                                <span class="text-[10px] font-mono text-slate-400">${p.code}</span>
+                            </div>
+                            <span class="text-lg bg-slate-800 px-2 py-0.5 rounded border border-slate-700" title="${countryName}">
+                                ${flag} <span class="text-[10px] font-bold text-slate-300">${p.countryCode || ''}</span>
+                            </span>
+                        </div>
+
+                        <div class="bg-slate-950/80 rounded-lg p-2.5 border border-slate-800 space-y-1.5 my-1">
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="text-slate-400"><i class="fas fa-tachometer-alt text-emerald-400 mr-1"></i> Estado:</span>
+                                <span class="font-bold text-emerald-300 truncate max-w-[150px]">${activity}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="text-slate-400"><i class="fas fa-road text-blue-400 mr-1"></i> Pista:</span>
+                                <span class="text-slate-200 truncate max-w-[150px]">${track}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="text-slate-400"><i class="fas fa-stopwatch text-amber-400 mr-1"></i> Mejor Vuelta:</span>
+                                <span class="font-mono font-bold text-amber-300">${bestLap}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center mt-3 pt-2 border-t border-slate-800/80 text-[10px] text-slate-400">
+                            <span><i class="far fa-clock mr-1 text-slate-500"></i> ${sessionMins}</span>
+                            <span class="font-bold text-slate-300">Total: ${formatPlaytime(p.playtime_minutes)}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            // 4. Renderizar Top Pilotos por Tiempo
+            const sortedByTime = [...allDocs].filter(d => (d.playtime_minutes || 0) > 0).sort((a, b) => (b.playtime_minutes || 0) - (a.playtime_minutes || 0)).slice(0, 5);
+            if (sortedByTime.length === 0) {
+                topList.innerHTML = `<p class="text-slate-500 text-center py-4">Aún no hay tiempos registrados.</p>`;
+            } else {
+                topList.innerHTML = sortedByTime.map((p, i) => `
+                    <div class="flex items-center justify-between bg-slate-800/40 px-3 py-2 rounded border border-slate-800">
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="font-black text-slate-500 w-4">#${i + 1}</span>
+                            <span>${getFlagEmoji(p.countryCode)}</span>
+                            <span class="truncate text-slate-200 font-medium">${p.email}</span>
+                        </div>
+                        <span class="font-mono font-bold text-emerald-400 ml-2">${formatPlaytime(p.playtime_minutes)}</span>
+                    </div>
+                `).join('');
+            }
+
+            // 5. Renderizar Distribución de Países
+            const countryEntries = Object.entries(countryMap).sort((a, b) => b[1] - a[1]);
+            if (countryEntries.length === 0) {
+                countriesList.innerHTML = `<p class="text-slate-500 text-xs py-4 w-full text-center">Sin datos de ubicación todavía.</p>`;
+            } else {
+                countriesList.innerHTML = countryEntries.map(([code, count]) => `
+                    <div class="bg-slate-800/70 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2 text-xs">
+                        <span class="text-base">${getFlagEmoji(code)}</span>
+                        <span class="font-bold text-white">${code}</span>
+                        <span class="bg-slate-900 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono">${count}</span>
+                    </div>
+                `).join('');
+            }
+
+            // 6. Renderizar Tabla General de Historial
+            body.innerHTML = "";
+            window.currentEmails = [];
+
+            if (allDocs.length === 0) {
+                body.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-slate-500">No hay licencias generadas aún.</td></tr>';
+                return;
+            }
+
+            allDocs.forEach(data => {
+                if (data.email && !String(data.id).startsWith('sim')) {
+                    window.currentEmails.push(data.email);
+                }
+                
+                let dateStr = '';
+                if (data.createdAt) {
+                    const d = new Date(data.createdAt);
+                    dateStr = `<div class="text-[9px] text-slate-500">Alta: ${d.toLocaleDateString()}</div>`;
+                } else if (String(data.id).startsWith('sim')) {
+                    dateStr = `<div class="text-[9px] text-amber-400/80">Piloto Simulado</div>`;
+                }
+
+                const isOnline = activePlayers.some(ap => ap.id === data.id);
+                let statusHtml = '-';
+                if (isOnline) {
+                    statusHtml = `
+                        <div class="flex flex-col">
+                            <span class="text-emerald-400 font-bold flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Jugando ahora
+                            </span>
+                            <span class="text-[9px] text-slate-400 truncate max-w-[120px]">${data.current_activity || 'En línea'}</span>
+                        </div>`;
+                } else if (data.current_session) {
+                    // Tiene sesión vinculada en su navegador, pero no está jugando ahora mismo
+                    statusHtml = '<span class="text-slate-400" title="Ya activó su clave en su dispositivo, pero ahora tiene la app cerrada"><i class="fas fa-check-circle text-emerald-500/60 mr-1"></i>Activada (Offline)</span>';
+                } else if (data.active !== undefined) {
+                    statusHtml = data.active ? '<span class="text-blue-400/80">Sin usar aún</span>' : '<span class="text-red-400">Bloqueado</span>';
+                }
+
+                const flag = data.countryCode ? getFlagEmoji(data.countryCode) : '';
+                let countryHtml = data.countryCode 
+                    ? `<span class="bg-slate-800 px-2 py-1 rounded border border-slate-700" title="${data.country || ''}">${flag} ${data.countryCode}</span>` 
+                    : '<span class="text-slate-600">-</span>';
+
+                const deleteBtnHtml = String(data.id).startsWith('sim') 
+                    ? '' 
+                    : `<button onclick="confirmDelete('${data.id}')" class="text-slate-500 hover:text-red-500 transition text-sm p-1" title="Eliminar Licencia">
+                           <i class="fas fa-trash-alt"></i>
+                       </button>`;
+
+                body.innerHTML += `<tr class="${isOnline ? 'bg-emerald-950/10' : ''}">
+                    <td class="truncate max-w-[140px]" title="${data.email}">
+                        <div class="font-medium text-slate-200 truncate">${data.email}</div>
+                        ${dateStr}
+                    </td>
+                    <td class="font-mono text-slate-300 font-bold text-xs">${data.code}</td>
+                    <td class="text-xs">${statusHtml}</td>
+                    <td class="text-xs text-center font-bold text-slate-300">${countryHtml}</td>
+                    <td class="text-xs text-center font-mono text-slate-300">${formatPlaytime(data.playtime_minutes)}</td>
+                    <td class="text-right">${deleteBtnHtml}</td>
+                </tr>`;
+            });
+        }
+
+        // --- HISTORIAL DE LICENCIAS (FIREBASE SNAPSHOT) ---
         function loadHistory() {
             if (!auth.currentUser) {
-                setTimeout(loadHistory, 500); // Reintentar si la autenticación aún no termina
+                setTimeout(loadHistory, 500);
                 return; 
             }
             try {
-                // Fetch all documents from the access_codes collection
                 onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'access_codes'), (snap) => {
-                    const body = document.getElementById('history-body');
-                    body.innerHTML = "";
-                    window.currentEmails = []; // Reiniciamos la lista global
-                    
-                    if (snap.empty) {
-                        body.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-slate-500">No hay licencias generadas aún.</td></tr>';
-                        return;
-                    }
-
-                    // Sort documents by createdAt locally, newest first
                     const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                     docs.sort((a, b) => {
                         const dateA = new Date(a.createdAt || 0).getTime();
                         const dateB = new Date(b.createdAt || 0).getTime();
-                        return dateB - dateA; // Descending order
+                        return dateB - dateA;
                     });
-
-                    docs.forEach(data => {
-                        if (data.email) {
-                            window.currentEmails.push(data.email); // Guardamos para el botón de copiar
-                        }
-                        
-                        // Format date if available
-                        let dateStr = '';
-                        if (data.createdAt) {
-                            const d = new Date(data.createdAt);
-                            dateStr = `<div class="text-[9px] text-slate-500">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
-                        }
-
-                        // Determine status display
-                        let statusHtml = '-';
-                        if (data.current_session) {
-                             statusHtml = '<span class="text-emerald-400 font-bold">Activo</span>';
-                        } else if (data.active !== undefined) {
-                             statusHtml = data.active ? '<span class="text-blue-400">Generada</span>' : '<span class="text-red-400">Inactiva</span>';
-                        }
-
-                        body.innerHTML += `<tr>
-                            <td class="truncate max-w-[120px] relative group" title="${data.email}">
-                                ${data.email}
-                                ${dateStr}
-                            </td>
-                            <td class="font-mono text-slate-300 font-bold text-xs">${data.code}</td>
-                            <td class="text-xs">${statusHtml}</td>
-                            <td class="text-right">
-                                <button onclick="confirmDelete('${data.id}')" class="text-slate-500 hover:text-red-500 transition text-sm p-1" title="Eliminar Licencia">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </td>
-                        </tr>`;
-                    });
+                    lastRealDocs = docs;
+                    renderDashboardAndTable(lastRealDocs);
                 }, (error) => {
                      console.error("Error cargando historial snapshot:", error);
                      const body = document.getElementById('history-body');
-                     body.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-400">Error cargando historial: ${error.message}</td></tr>`;
+                     body.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-400">Error cargando historial: ${error.message}</td></tr>`;
                 });
             } catch(e) {
                 console.error("Error cargando historial:", e);
             }
         }
 
-        // --- STREAMING_CHUNK:Handling UI actions... ---
         // --- FASE 1: ENVIAR DATOS DE PAGO ---
         window.sendPaymentRequest = function() {
             const email = document.getElementById('client-email-1').value;
